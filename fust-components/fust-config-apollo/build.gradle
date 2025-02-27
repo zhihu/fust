@@ -1,0 +1,11 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-components:fust-config-extension")
+    api("com.ctrip.framework.apollo:apollo-client:${apolloVersion}")
+    testImplementation 'org.mockito:mockito-core:4.11.0'
+}
+
+description = 'fust-config-apollo'

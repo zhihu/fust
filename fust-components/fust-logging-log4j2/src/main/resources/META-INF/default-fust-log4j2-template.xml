@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="15" shutdownHook="disable">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <ThresholdFilter level="#console.level#" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="#logging.pattern#"/>
+        </Console>
+        <RollingFile name="RollingFile" fileName="#_file_path_#.log"
+                     filePattern="#_file_path_#-%d{yyyy-MM-dd}-%i.log">
+            <ThresholdFilter level="#file.level#" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="#logging.pattern#"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="#file.base.size#"/>
+            </Policies>
+            <DefaultRolloverStrategy max="#file.max.history#"/>
+        </RollingFile>
+        <!-- sentry-placeholder -->
+    </Appenders>
+    <Loggers>
+        <!-- logger-placeholder -->
+        <Root level="#root.level#">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+
+    <!-- filter-placeholder -->
+</Configuration>

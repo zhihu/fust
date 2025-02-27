@@ -1,0 +1,28 @@
+syntax = "proto3";
+// 一般情况下 Package 可以按照「项目名.服务类型.服务名」的方式进行命名
+package hello;
+
+// 可以直接使用 google 的公开协议
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+// 如果需要生成 Golang 代码需要指定 go_package, 通常是「项目名/服务类型/服务名」即可
+option go_package = ".;grpc_test";
+option java_multiple_files = true;
+option java_outer_classname = "HelloProto";
+option java_package = "com.zhihu.fust.example.hello";
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string message = 1;
+  google.protobuf.Timestamp now = 2;
+}
+
+service HelloService {
+  rpc Hello(HelloRequest) returns (HelloResponse) {
+    option (google.api.http) = {get: "/hello/{name}"};
+  }
+}

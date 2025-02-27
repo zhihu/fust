@@ -1,0 +1,10 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-boot:fust-boot-starter")
+    api project(":fust-components:fust-logging-log4j2")
+}
+
+description = 'fust-boot-log4j2'

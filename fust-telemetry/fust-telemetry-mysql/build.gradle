@@ -1,0 +1,11 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(':fust-telemetry:fust-telemetry-api')
+    compileOnly 'com.mysql:mysql-connector-j'
+}
+
+
+description = "fust-telemetry-mysql"

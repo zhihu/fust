@@ -1,0 +1,18 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(':fust-telemetry:fust-telemetry-api')
+    api("io.opentelemetry.instrumentation:opentelemetry-resources")
+    api("io.opentelemetry:opentelemetry-sdk");
+    api('io.opentelemetry:opentelemetry-sdk-trace')
+    api('io.opentelemetry:opentelemetry-sdk-metrics')
+    api('io.opentelemetry:opentelemetry-sdk-logs')
+    api('io.opentelemetry:opentelemetry-sdk-common')
+    api("io.opentelemetry:opentelemetry-exporter-logging")
+    api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure");
+}
+
+
+description = "fust-telemetry-sdk"

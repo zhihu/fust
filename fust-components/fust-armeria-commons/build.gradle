@@ -1,0 +1,12 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-core")
+    api project(":fust-telemetry:fust-telemetry-api")
+    api "com.linecorp.armeria:armeria"
+}
+
+
+description = "fust-rpc-commons"

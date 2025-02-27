@@ -1,0 +1,15 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-core")
+    api project(':fust-telemetry:fust-telemetry-api')
+    api 'org.apache.commons:commons-lang3'
+    api 'org.springframework:spring-aspects'
+    api 'org.springframework:spring-beans'
+    testImplementation 'org.instancio:instancio-junit:5.0.2'
+    testImplementation "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+}
+description = 'fust-spring-toolkit'

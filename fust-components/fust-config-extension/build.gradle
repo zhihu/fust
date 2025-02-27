@@ -1,0 +1,12 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-core")
+    api "com.fasterxml.jackson.core:jackson-core"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+    api "com.google.guava:guava:${guavaVersion}"
+}
+
+description = 'fust-config-commons'

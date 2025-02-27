@@ -1,0 +1,63 @@
+plugins {
+    id "java-platform"
+    id "maven-publish"
+}
+
+dependencies {
+    constraints {
+        // projects
+        api project(":fust-base:fust-commons")
+        api project(":fust-base:fust-core")
+        api project(":fust-base:fust-provider")
+        api project(":fust-components:fust-config-apollo")
+        api project(":fust-components:fust-config-extension")
+        api project(":fust-components:fust-logging-log4j2")
+        api project(":fust-components:fust-armeria-grpc")
+        api project(":fust-components:fust-armeria-commons")
+        api project(":fust-telemetry:fust-telemetry-api")
+        api project(":fust-telemetry:fust-telemetry-lettuce")
+        api project(":fust-telemetry:fust-telemetry-mysql")
+        api project(":fust-telemetry:fust-telemetry-sdk")
+        api project(":fust-telemetry:fust-telemetry-spring-mvc")
+        api project(":fust-spring:fust-spring-jdbc")
+        api project(":fust-spring:fust-spring-jedis")
+        api project(":fust-spring:fust-spring-mybatis")
+        api project(":fust-spring:fust-spring-lettuce")
+        api project(":fust-spring:fust-spring-toolkit")
+        api project(":fust-spring:fust-spring-web")
+        api project(":fust-boot:fust-boot-starter")
+        api project(":fust-boot:fust-boot-grpc")
+        api project(":fust-boot:fust-boot-jdbc")
+        api project(":fust-boot:fust-boot-jedis")
+        api project(":fust-boot:fust-boot-log4j2")
+        api project(":fust-boot:fust-boot-mybatis")
+        api project(":fust-boot:fust-boot-lettuce")
+        api project(":fust-boot:fust-boot-web")
+    }
+}
+
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            version = project.version
+            artifactId = 'bom'
+            from(components.javaPlatform)
+        }
+    }
+    repositories {
+        maven {
+            name = "central"
+            def releasesRepoUrl = "https://repo.in.zhihu.com/artifactory/libs-release-local"
+            def snapshotsRepoUrl = "https://repo.in.zhihu.com/artifactory/libs-snapshot-local"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username = "${zhihuRepoUser}"
+                password = "${zhihuRepoPwd}"
+            }
+        }
+    }
+}
+
+description = 'bom'

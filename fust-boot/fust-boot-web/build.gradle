@@ -1,0 +1,15 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-boot:fust-boot-starter")
+    api project(":fust-spring:fust-spring-web")
+    api("org.springframework.boot:spring-boot-starter-web") {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+    api 'org.springframework.boot:spring-boot-starter-jetty'
+    api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+}
+
+description = 'fust-boot-web'
