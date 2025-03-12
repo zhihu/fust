@@ -1,0 +1,12 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-commons")
+    api project(":fust-base:fust-provider")
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+}
+
+description = 'fust-core'

@@ -1,0 +1,51 @@
+plugins {
+    id 'base'
+    id 'jacoco-report-aggregation'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    jacocoAggregation project(':fust-base:fust-core')
+    jacocoAggregation project(":fust-base:fust-commons")
+    jacocoAggregation project(":fust-base:fust-core")
+    jacocoAggregation project(":fust-base:fust-provider")
+    jacocoAggregation project(":fust-components:fust-config-apollo")
+    jacocoAggregation project(":fust-components:fust-config-extension")
+    jacocoAggregation project(":fust-components:fust-logging-log4j2")
+    jacocoAggregation project(":fust-components:fust-armeria-grpc")
+    jacocoAggregation project(":fust-components:fust-armeria-commons")
+    jacocoAggregation project(":fust-telemetry:fust-telemetry-api")
+    jacocoAggregation project(":fust-telemetry:fust-telemetry-lettuce")
+    jacocoAggregation project(":fust-telemetry:fust-telemetry-mysql")
+    jacocoAggregation project(":fust-telemetry:fust-telemetry-sdk")
+    jacocoAggregation project(":fust-telemetry:fust-telemetry-spring-mvc")
+    jacocoAggregation project(":fust-spring:fust-spring-jdbc")
+    jacocoAggregation project(":fust-spring:fust-spring-jedis")
+    jacocoAggregation project(":fust-spring:fust-spring-mybatis")
+    jacocoAggregation project(":fust-spring:fust-spring-lettuce")
+    jacocoAggregation project(":fust-spring:fust-spring-toolkit")
+    jacocoAggregation project(":fust-spring:fust-spring-web")
+    jacocoAggregation project(":fust-boot:fust-boot-starter")
+    jacocoAggregation project(":fust-boot:fust-boot-grpc")
+    jacocoAggregation project(":fust-boot:fust-boot-jdbc")
+    jacocoAggregation project(":fust-boot:fust-boot-jedis")
+    jacocoAggregation project(":fust-boot:fust-boot-log4j2")
+    jacocoAggregation project(":fust-boot:fust-boot-mybatis")
+    jacocoAggregation project(":fust-boot:fust-boot-lettuce")
+    jacocoAggregation project(":fust-boot:fust-boot-web")
+}
+
+reporting {
+    reports {
+        testCodeCoverageReport(JacocoCoverageReport) {
+            testType = TestSuiteType.UNIT_TEST
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('testCodeCoverageReport', JacocoReport)
+}

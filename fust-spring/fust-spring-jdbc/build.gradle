@@ -1,0 +1,18 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-core")
+    api project(":fust-telemetry:fust-telemetry-mysql")
+    api "com.fasterxml.jackson.core:jackson-core"
+    api "com.fasterxml.jackson.core:jackson-databind"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+    api 'org.springframework:spring-context'
+    api 'org.springframework:spring-tx'
+    api 'org.springframework:spring-jdbc'
+    api 'com.mysql:mysql-connector-j'
+    api "com.zaxxer:HikariCP"
+}
+
+description = 'fust-spring-jdbc'

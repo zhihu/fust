@@ -1,0 +1,219 @@
+plugins {
+    id "io.spring.dependency-management"
+    id "java-platform"
+    id "maven-publish"
+    id 'signing'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri('https://repo.maven.apache.org/maven2/')
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    }
+
+    dependencies {
+        dependency "org.projectlombok:lombok:${lombokVersion}"
+        dependencySet(group: 'com.zhihu.fust', version: version) {
+            entry 'fust-commons'
+            entry 'fust-core'
+            entry 'fust-provider'
+            entry 'fust-config-apollo'
+            entry 'fust-config-extension'
+            entry 'fust-logging-log4j2'
+            entry 'fust-armeria-grpc'
+            entry 'fust-armeria-commons'
+            entry 'fust-telemetry-api'
+            entry 'fust-telemetry-lettuce'
+            entry 'fust-telemetry-mysql'
+            entry 'fust-telemetry-sdk'
+            entry 'fust-telemetry-spring-mvc'
+            entry 'fust-spring-jdbc'
+            entry 'fust-spring-jedis'
+            entry 'fust-spring-mybatis'
+            entry 'fust-spring-lettuce'
+            entry 'fust-spring-toolkit'
+            entry 'fust-spring-web'
+            entry 'fust-boot-starter'
+            entry 'fust-boot-grpc'
+            entry 'fust-boot-jdbc'
+            entry 'fust-boot-jedis'
+            entry 'fust-boot-log4j2'
+            entry 'fust-boot-mybatis'
+            entry 'fust-boot-lettuce'
+            entry 'fust-boot-web'
+        }
+        // gradle java-platform 不支持 exclude
+        dependency("org.springframework.boot:spring-boot-starter:${springBootVersion}") {
+            exclude 'org.springframework.boot:spring-boot-starter-logging'
+        }
+        dependency("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
+            exclude "com.vaadin.external.google:android"
+        }
+        dependency "com.google.inject:guice:${guiceVersion}"
+        dependency "org.yaml:snakeyaml:${snakeyamlVersion}"
+    }
+}
+
+// maven extra xml config
+def xmlParser = new groovy.xml.XmlParser()
+
+// maven parent
+def parentOfSpringXmlNode = xmlParser.parseText("""
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>${springBootVersion}</version>
+    </parent>
+""")
+
+// maven build
+def buildXmlNode = xmlParser.parseText("""
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.0.0-M5</version>
+                    <configuration>
+                        <argLine>--add-opens java.base/java.lang=ALL-UNNAMED @{argLine}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>3.0.0-M5</version>
+                    <configuration>
+                        <argLine>--add-opens java.base/java.lang=ALL-UNNAMED @{argLine}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+""")
+
+publishing {
+    publications {
+        mavenBom(MavenPublication) {
+            groupId = project.group
+            version = project.version
+            from(components.javaPlatform)
+            pom {
+                properties = [
+                        "maven.compiler.source"           : "17",
+                        "maven.compiler.target"           : "17",
+                        "project.build.sourceEncoding"    : "UTF-8",
+                        "project.build.resourceEncoding"  : "UTF-8",
+                        "project.reporting.outputEncoding": "UTF-8",
+                        "java.version"                    : "17",
+                        "argLine"                         : "",
+                ]
+
+                name = project.name
+                description = 'FUST - A Java Microservice Framework'
+                url = 'https://github.com/zhihu/fust'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        name = 'zhihu'
+                        email = 'opensource@zhihu.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/zhihu/fust.git'
+                    developerConnection = 'scm:git:ssh://github.com/zhihu/fust.git'
+                    url = 'https://github.com/zhihu/fust'
+                }
+                // 添加额外的节点信息
+                withXml {
+                    def node = asNode()
+
+                    // add parent
+                    node.append(parentOfSpringXmlNode)
+                    NodeList children = (NodeList) node.children()
+                    children.add(0, parentOfSpringXmlNode)
+                    children.remove(children.size() - 1)
+
+                    // add build
+                    node.append(buildXmlNode)
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = uri(projectDir.getAbsolutePath() + stagingDeployDir)
+        }
+    }
+}
+
+signing {
+    required { gradle.taskGraph.hasTask("publish") }
+    def signingKey = System.getenv("GPG_SIGNING_KEY")
+    def signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenBom
+}

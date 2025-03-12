@@ -1,0 +1,11 @@
+[
+  {
+    "name": "default",
+    "nodes": [
+      {
+        "host": "localhost",
+        "port": 6379
+      }
+    ]
+  }
+]

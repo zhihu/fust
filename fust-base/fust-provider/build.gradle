@@ -1,0 +1,11 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    compileOnly('io.opentelemetry:opentelemetry-sdk-trace')
+    compileOnly('io.opentelemetry:opentelemetry-sdk-metrics')
+    compileOnly('io.opentelemetry:opentelemetry-sdk-logs')
+}
+
+description = 'fust-provider'

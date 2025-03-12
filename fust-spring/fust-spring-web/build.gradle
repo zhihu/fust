@@ -1,0 +1,12 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-core")
+    api 'org.springframework:spring-web'
+    api 'org.springframework:spring-webmvc'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+}
+description = 'fust-spring-web'

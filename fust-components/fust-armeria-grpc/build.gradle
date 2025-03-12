@@ -1,0 +1,12 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+    id "com.google.protobuf" version "0.9.3"
+}
+
+dependencies {
+    api project(":fust-components:fust-armeria-commons")
+    api project(":fust-telemetry:fust-telemetry-api")
+    api "com.linecorp.armeria:armeria-grpc"
+}
+
+description = 'fust-grpc'

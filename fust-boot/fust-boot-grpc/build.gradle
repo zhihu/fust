@@ -1,0 +1,10 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-boot:fust-boot-starter")
+    api project(":fust-components:fust-armeria-grpc")
+}
+
+description = 'fust-boot-grpc'

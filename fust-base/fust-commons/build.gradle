@@ -1,0 +1,7 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+dependencies {
+
+}
+description = 'fust-commons'

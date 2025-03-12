@@ -1,0 +1,13 @@
+version: v1
+deps:
+  # public googleapis buf module
+  - buf.build/googleapis/googleapis:main
+lint:
+  use:
+    - DEFAULT
+  except:
+    - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_VERSION_SUFFIX
+breaking:
+  use:
+    - FILE

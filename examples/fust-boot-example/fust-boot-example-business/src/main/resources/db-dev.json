@@ -1,0 +1,13 @@
+[
+  {
+    "name": "db1",
+    "ds": [
+      {
+        "name": "db1-master",
+        "url": "jdbc:mysql://127.0.0.1:3306/db1",
+        "username": "root",
+        "password": "123"
+      }
+    ]
+  }
+]

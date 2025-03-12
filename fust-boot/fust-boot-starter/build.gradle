@@ -1,0 +1,13 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-base:fust-core")
+    api project(":fust-telemetry:fust-telemetry-sdk")
+    api("org.springframework.boot:spring-boot-starter") {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+}
+
+description = 'fust-boot-starter'

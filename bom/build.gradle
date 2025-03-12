@@ -1,0 +1,91 @@
+plugins {
+    id "java-platform"
+    id "maven-publish"
+    id 'signing'
+}
+
+dependencies {
+    constraints {
+        // projects
+        api project(":fust-base:fust-commons")
+        api project(":fust-base:fust-core")
+        api project(":fust-base:fust-provider")
+        api project(":fust-components:fust-config-apollo")
+        api project(":fust-components:fust-config-extension")
+        api project(":fust-components:fust-logging-log4j2")
+        api project(":fust-components:fust-armeria-grpc")
+        api project(":fust-components:fust-armeria-commons")
+        api project(":fust-telemetry:fust-telemetry-api")
+        api project(":fust-telemetry:fust-telemetry-lettuce")
+        api project(":fust-telemetry:fust-telemetry-mysql")
+        api project(":fust-telemetry:fust-telemetry-sdk")
+        api project(":fust-telemetry:fust-telemetry-spring-mvc")
+        api project(":fust-spring:fust-spring-jdbc")
+        api project(":fust-spring:fust-spring-jedis")
+        api project(":fust-spring:fust-spring-mybatis")
+        api project(":fust-spring:fust-spring-lettuce")
+        api project(":fust-spring:fust-spring-toolkit")
+        api project(":fust-spring:fust-spring-web")
+        api project(":fust-boot:fust-boot-starter")
+        api project(":fust-boot:fust-boot-grpc")
+        api project(":fust-boot:fust-boot-jdbc")
+        api project(":fust-boot:fust-boot-jedis")
+        api project(":fust-boot:fust-boot-log4j2")
+        api project(":fust-boot:fust-boot-mybatis")
+        api project(":fust-boot:fust-boot-lettuce")
+        api project(":fust-boot:fust-boot-web")
+    }
+}
+
+
+publishing {
+    publications {
+        mavenBom(MavenPublication) {
+            groupId = project.group
+            version = project.version
+            artifactId = 'bom'
+            from(components.javaPlatform)
+            pom {
+                name = project.name
+                description = 'FUST - A Java Microservice Framework'
+                url = 'https://github.com/zhihu/fust'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        name = 'zhihu'
+                        email = 'opensource@zhihu.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/zhihu/fust.git'
+                    developerConnection = 'scm:git:ssh://github.com/zhihu/fust.git'
+                    url = 'https://github.com/zhihu/fust'
+                }
+            }
+        }
+
+    }
+    repositories {
+        maven {
+            url = uri(projectDir.getAbsolutePath() + stagingDeployDir)
+        }
+    }
+}
+
+signing {
+    required { gradle.taskGraph.hasTask("publish") }
+    def signingKey = System.getenv("GPG_SIGNING_KEY")
+    def signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenBom
+}
+
+description = 'bom'
