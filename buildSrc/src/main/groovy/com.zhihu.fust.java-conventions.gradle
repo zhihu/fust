@@ -120,7 +120,14 @@ publishing {
     }
     repositories {
         maven {
-            url = uri(projectDir.getAbsolutePath() + stagingDeployDir)
+            name = "central"
+            def releasesRepoUrl = "${fustRepoUrlRelease}"
+            def snapshotsRepoUrl = "${fustRepoUrlSnapshots}"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username = "${fustRepoUser}"
+                password = "${fustRepoPwd}"
+            }
         }
     }
 }

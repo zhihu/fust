@@ -163,7 +163,7 @@ public final class GrpcServerBuilder {
 
     /**
      * Enable DocService in Staging Env
-     * Development & QA env will auto enable DocService
+     * Development and QA env will auto enable DocService
      * @param enabled enabled
      */
     public GrpcServerBuilder enableStagingDocService(boolean enabled) {

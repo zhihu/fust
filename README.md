@@ -28,31 +28,12 @@ FUST 谐音 Fast， 是一个基于 Spring Boot 的快速开发框架，提供�
 * 📝 **配置管理** - 集成 Apollo 配置中心，支持配置热更新
 * 🎯 **动态日志** - 自动化的日志配置文件生成，且支持配置中心动态控制
 
-## 🛠️安装
-
-### 📦 Maven
-
-在项目的pom.xml的dependencies中加入以下内容:
-
-```xml
-<dependency>
-    <groupId>com.zhihu.fust</groupId>
-    <artifactId>fust-boot-starter</artifactId>
-    <version>${version}</version>
-</dependency>
-```
-
-### 🐘 Gradle
-
-```gradle
-implementation 'com.zhihu.fust:fust-boot-starter:${version}'
-```
-
 ## 📝快速开始
 
 1. 确保您的开发环境满足以下要求：
    - JDK 17 或更高版本
-   - Gradle 8.x
+   - Gradle 8.3+（用于构建FUST框架）
+   - Buf（用于生成Protocol Buffers代码）
 
 2. 克隆项目：
 
@@ -63,8 +44,50 @@ git clone https://github.com/zhihu/fust
 3. 构建项目：
 
 ```bash
-./gradlew build
+# 发布到本地Maven仓库
+./gradlew publishToMavenLocal
 ```
+
+
+## 📝文档
+
+FUST 官方文档网站已上线：[https://zhihu.github.io/fust/](https://zhihu.github.io/fust/)
+
+推荐通过官方文档网站学习和了解 FUST 框架的各项功能和最佳实践。
+
+如需本地构建文档，fust-docs 使用 vitepress 构建：
+
+- 安装 vitepress
+```bash
+npm add -D vitepress
+```
+
+- 运行文档
+```bash
+npm run docs:dev
+```
+
+## ⚙️Gradle 配置发布到远程仓库
+
+### gradle.properties 远程仓库配置
+
+在用户目录下创建 `~/.gradle/gradle.properties` 文件，添加远程仓库配置：
+
+```properties
+# Maven 发布配置
+fustRepoUrlRelease=https://your-release-repo-url
+fustRepoUrlSnapshots=https://your-snapshots-repo-url
+fustRepoUser=your-repo-username
+fustRepoPwd=your-repo-password
+```
+
+根据您的实际环境修改上述配置，特别是仓库地址和认证信息。
+
+### 发布到远程仓库
+```bash
+./gradlew publish
+```
+
 
 ## 🎨核心功能
 
@@ -175,9 +198,7 @@ git clone https://github.com/zhihu/fust
 
 FUST 提供了项目脚手架，帮助您快速创建基于 FUST 框架的项目。
 
-### 使用方式
-
-#### 1. 命令行创建(MacOS)
+### 命令行创建(MacOS)
 
 ```bash
 export ORIGIN_HOME=$JAVA_HOME && \
@@ -188,87 +209,40 @@ mvn archetype:generate -DarchetypeGroupId=com.zhihu.fust \
 export JAVA_HOME=$ORIGIN_HOME && unset ORIGIN_HOME
 ```
 
-#### 2. IDE 创建
-
-在 IDE 中选择 "Create New Project" -> "Maven" -> "Create from Archetype"，然后搜索 "fust-archetype"。
-
 ### 项目结构
 
 使用 archetype 创建的项目将包含以下结构：
 
 ```
-demo-yoda
-├── README.md
-├── build.sh
-├── demo-yoda-api
-│   ├── pom.xml
-│   └── src
-│       └── main
-│           ├── java
-│           │   └── demo
-│           │       └── api
-│           │           ├── ApiMain.java
-│           │           └── HelloController.java
-│           └── resources
-├── demo-yoda-business
-│   ├── pom.xml
-│   └── src
-│       ├── main
-│       │   └── java
-│       │       └── demo
-│       │           └── business
-│       │               ├── ServiceConfiguration.java
-│       │               ├── dao
-│       │               ├── dto
-│       │               ├── model
-│       │               └── service
-│       └── test
-│           ├── java
-│           │   └── test
-│           │       └── service
-│           │           ├── TestBeanConfig.java
-│           │           ├── TestConfiguration.java
-│           │           └── TestDao.java
-│           └── resources
-│               ├── application.properties
-│               └── test.sql
-├── demo-yoda-grpc
-│   ├── pom.xml
-│   └── src
-│       └── main
-│           ├── java
-│           │   └── demo
-│           │       └── grpc
-│           │           ├── GrpcMain.java
-│           │           ├── GrpcServer.java
-│           │           └── HelloServiceHandler.java
-│           └── resources
-├── pom.xml
-├── proto
-│   ├── buf.yaml
-│   └── hello.proto
-└── run.sh
-
+demo-yoda/
+├── build.sh                     # 构建脚本
+├── run.sh                       # 运行脚本
+├── buf.gen.yaml                 # Buf配置文件
+├── checkstyle.xml               # 代码风格检查配置
+├── pom.xml                      # 项目父POM
+├── proto/                       # Proto定义目录
+│   ├── buf.yaml                 # Buf模块配置
+│   └── hello/                   # 示例服务Proto定义
+│       └── hello.proto          # 示例Proto文件
+├── demo-yoda-api/               # API模块
+│   ├── pom.xml                  # API模块POM
+│   └── src/                     # API源码
+├── demo-yoda-business/          # 业务逻辑模块
+│   ├── pom.xml                  # 业务模块POM
+│   ├── sql/                     # SQL脚本目录
+│   └── src/                     # 业务源码
+└── demo-yoda-grpc/              # gRPC服务模块
+    ├── buf.gen.yaml             # gRPC模块的Buf配置
+    ├── pom.xml                  # gRPC模块POM
+    └── src/                     # gRPC服务实现源码
 ```
 
-### 文档
+### 模块说明
 
-fust-docs 使用 vitepress 构建文档
+- **demo-yoda-api**: 包含API接口定义、数据模型及公共组件，使用传统的Spring MVC提供HTTP REST接口。
+- **demo-yoda-business**: 包含业务逻辑实现、数据访问层等核心业务代码。
+- **demo-yoda-grpc**: 包含gRPC服务实现，对外提供gRPC接口。
 
-- 安装 vitepress
-```bash
-npm add -D vitepress
-```
-
-- 运行文档
-```bash
-npm run docs:dev
-```
-### 📐开发建议
-
-1. 遵循模块化开发原则，保持模块间合理分层
-2. 使用 proto 文件定义服务接口
-3. 合理使用框架提供的功能组件
 
 ## 🏗️参与贡献
 

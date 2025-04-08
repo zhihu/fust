@@ -2,24 +2,9 @@ plugins {
     id 'java-platform'
     id 'maven-publish'
     id 'signing'
-    id("com.gradleup.nmcp").version("0.0.8")
 }
 
 allprojects {
     group = project.findProperty('group')
     version = project.findProperty('version')
-
-    nmcp {
-        publishAllPublications {
-
-        }
-    }
-}
-
-nmcp {
-    publishAllProjectsProbablyBreakingProjectIsolation {
-        username = System.getenv("SONATYPE_USERNAME");
-        password = System.getenv("SONATYPE_PASSWORD");
-        publicationType = "AUTOMATIC"
-    }
 }
