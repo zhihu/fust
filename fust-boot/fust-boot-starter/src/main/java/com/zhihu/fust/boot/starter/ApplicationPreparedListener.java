@@ -1,5 +1,6 @@
 package com.zhihu.fust.boot.starter;
 
+import com.zhihu.fust.telemetry.sdk.TelemetryInitializer;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.context.ApplicationListener;
 
@@ -13,9 +14,10 @@ public class ApplicationPreparedListener implements ApplicationListener<Applicat
     @Override
     public void onApplicationEvent(ApplicationPreparedEvent event) {
         Env.init();
+        TelemetryInitializer.init();
         ILoggingSystem loggingSystem = ILoggingSystem.get();
         SpiServiceLoader.get(IConfigService.class)
-                        .ifPresent(IConfigService::initialize);
+                .ifPresent(IConfigService::initialize);
 
         // if config service support dynamic logging config, auto config will happen here
         loggingSystem.initialize();

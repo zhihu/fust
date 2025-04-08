@@ -16,7 +16,7 @@ cd $service_dir
 
 
 # spring boot launcher
-launcher="org.springframework.boot.loader.JarLauncher"
+launcher="org.springframework.boot.loader.launch.JarLauncher"
 
 # Add opens
 ADD_OPEN="--add-opens java.base/java.lang=ALL-UNNAMED"

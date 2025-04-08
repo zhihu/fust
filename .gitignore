@@ -1,9 +1,13 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
+**/.vitepress/cache/**
 !**/src/main/**/target/
 !**/src/test/**/target/
 **/gen-src/**
 **/generated-*/**
+
+### vitepress ###
+dist/
 
 ### IntelliJ IDEA ###
 .gradle/

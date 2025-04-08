@@ -251,7 +251,19 @@ demo-yoda
 
 ```
 
+### 文档
 
+fust-docs 使用 vitepress 构建文档
+
+- 安装 vitepress
+```bash
+npm add -D vitepress
+```
+
+- 运行文档
+```bash
+npm run docs:dev
+```
 ### 📐开发建议
 
 1. 遵循模块化开发原则，保持模块间合理分层
