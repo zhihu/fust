@@ -2,6 +2,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 *.DS_Store
 *.log
+.vscode
 
 ### STS ###
 .apt_generated
