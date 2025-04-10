@@ -93,7 +93,7 @@ brew install bufbuild/buf/buf
 
 # 更新Buf模块依赖
 cd proto
-buf mod update
+buf dep update
 cd ..
 
 # 生成Protocol Buffers代码
