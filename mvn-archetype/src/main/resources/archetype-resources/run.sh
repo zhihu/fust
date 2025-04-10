@@ -22,8 +22,8 @@ launcher="org.springframework.boot.loader.launch.JarLauncher"
 ADD_OPEN="--add-opens java.base/java.lang=ALL-UNNAMED"
 
 # XMX and XMS
-XMS=512
-XMX=1024
+XMS=512m
+XMX=1024m
 
 # run it
-exec java ${ADD_OPEN} -Xms"$XMS"  -Xmx"$XMX"m ${launcher} ${arg1} ${arg2}
+exec java ${ADD_OPEN} -Xms"$XMS"  -Xmx"$XMX" ${launcher} ${arg1} ${arg2}
