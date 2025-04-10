@@ -3,6 +3,10 @@ target/
 *.DS_Store
 *.log
 .vscode
+mod_lib/
+lib/
+services/
+gen-src/
 
 ### STS ###
 .apt_generated
