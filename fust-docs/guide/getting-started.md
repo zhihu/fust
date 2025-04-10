@@ -22,6 +22,11 @@ cd fust
 
 # 发布到本地Maven仓库
 ./gradlew publishToMavenLocal
+
+# 发布 archetype 到本地仓库，用于创建项目
+cd mvn-archetype
+mvn package install
+
 ```
 
 ## 创建项目
