@@ -438,7 +438,7 @@ class UserDaoTest {
         // 生日应保持不变
         assertNotNull(patched.getBirthday());
     }
-    
+
     @Test
     void testFindByIds() {
         // 准备要查询的ID列表
@@ -464,8 +464,7 @@ class UserDaoTest {
 2. 使用JSON文件配置数据源
 3. 创建实体模型类
 4. 使用MyBatis的注解方式定义DAO接口，实现TemplateDao的基本CRUD操作
-5. 实现分页查询功能
-6. 使用CollectionDriver实现高效的批量查询
-7. 利用H2内存数据库进行DAO层测试
+5. 使用CollectionDriver实现高效的批量查询
+6. 利用H2内存数据库进行DAO层测试
 
 通过上述步骤，我们完成了`demo-yoda`项目的数据访问层设计与实现。在下一章中，我们将基于数据访问层构建业务服务层。 
