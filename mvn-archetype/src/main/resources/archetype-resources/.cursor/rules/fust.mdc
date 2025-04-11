@@ -69,14 +69,19 @@ public interface UserDao extends TemplateDao<UserModel> {
 
 ## 测试规范与规则
 
-### 单元测试规范
+### 测试分层规范
+- **单元测试**: 针对业务逻辑层（Service）和工具类，使用 Mockito 模拟依赖
+- **DAO层测试**: 使用 Spring Boot 测试框架进行数据访问层测试，通常使用内存数据库
+- **集成测试**: 测试多个组件的协作，验证端到端功能
+
+### 单元测试规范（Service层）
 - 使用 JUnit 5 进行单元测试
 - 使用 Mockito 模拟外部依赖
 - 不要使用 SpringBoot 的测试注解进行单元测试
 - 针对单一功能点编写测试
 - 测试类和方法名称要清晰表达测试意图
 
-### 单元测试示例
+### 单元测试示例（Service层）
 ```java
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -104,11 +109,123 @@ class UserServiceTest {
 }
 ```
 
+### DAO层测试规范
+- 使用 Spring Boot 的测试框架进行 DAO 层测试
+- 使用 `@SpringBootTest` 或专用于数据访问的 `@DataJpaTest` 注解
+- 使用 `@ActiveProfiles("test")` 激活测试专用配置
+- 可以使用内存数据库（如H2）简化测试环境搭建
+- 测试所有 DAO 方法，包括 TemplateDao 提供的基础方法和自定义方法
+
+### DAO层测试示例
+```java
+@SpringBootTest
+@ActiveProfiles("test")
+class UserDaoTest {
+    
+    @Autowired
+    private UserDao userDao;
+    
+    private UserModel createUser(String username) {
+        UserModel user = new UserModel();
+        user.setBirthday(LocalDate.of(1998, 4, 4));
+        user.setName(username);
+        userDao.create(user);
+        return user;
+    }
+    
+    @Test
+    void testFind() {
+        UserModel user = userDao.find(1L);
+        assertNotNull(user);
+        assertEquals("User 1", user.getName());
+    }
+    
+    @Test
+    void testCreate() {
+        UserModel user = new UserModel();
+        user.setBirthday(LocalDate.of(1998, 4, 4));
+        user.setName("User 4");
+        
+        boolean result = userDao.create(user);
+        assertTrue(result);
+        assertNotNull(user.getId());
+        
+        UserModel saved = userDao.find(user.getId());
+        assertNotNull(saved);
+        assertEquals("User 4", saved.getName());
+    }
+    
+    @Test
+    void testUpdate() {
+        UserModel user = createUser("user update");
+        assertNotNull(user);
+        
+        user.setName("更新的名称");
+        boolean result = userDao.update(user);
+        assertTrue(result);
+        
+        UserModel updated = userDao.find(user.getId());
+        assertNotNull(updated);
+        assertEquals("更新的名称", updated.getName());
+    }
+    
+    @Test
+    void testRemove() {
+        boolean result = userDao.remove(2L);
+        assertTrue(result);
+        
+        UserModel deleted = userDao.find(2L);
+        assertNull(deleted);
+    }
+    
+    @Test
+    void testPatch() {
+        UserModel user = createUser("user patch");
+        UserModel partialUser = new UserModel();
+        partialUser.setId(user.getId());
+        partialUser.setName("部分更新名称");
+        
+        boolean result = userDao.patch(partialUser);
+        assertTrue(result);
+        
+        UserModel patched = userDao.find(user.getId());
+        assertNotNull(patched);
+        assertEquals("部分更新名称", patched.getName());
+        // 生日应保持不变
+        assertNotNull(patched.getBirthday());
+    }
+    
+    @Test
+    void testFindByIds() {
+        List<Long> userIds = Arrays.asList(1L, 3L);
+        List<UserModel> users = userDao.findByIds(userIds);
+        assertNotNull(users);
+        assertEquals(2, users.size());
+    }
+}
+```
+
+### DAO层测试环境配置示例
+```java
+@Profile("test")
+@Configuration
+@EnableCaching
+public class TestBeanConfig {
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+                .setName("demo_yoda") // 数据库名
+                .setType(EmbeddedDatabaseType.H2) // 内存数据类型: h2 database
+                .addScript("classpath:schema-h2.sql") // 加载数据库结构脚本
+                .addScript("classpath:data-h2.sql") // 加载初始数据脚本
+                .build();
+    }
+}
+```
+
 ### 集成测试规范
-- 集成测试可以使用 SpringBoot 的测试能力
 - 使用 `@SpringBootTest` 进行完整应用上下文测试
 - 使用 `@WebMvcTest` 进行控制器层测试
-- 使用 `@DataJpaTest` 或类似注解进行数据访问层测试
 - 使用 `@ActiveProfiles("test")` 激活测试配置
 - 使用 `@Transactional` 确保测试方法间的数据隔离
 
