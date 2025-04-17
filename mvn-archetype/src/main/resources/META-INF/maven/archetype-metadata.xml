@@ -18,6 +18,13 @@
       </includes>
     </fileSet>
     <fileSet filtered="false" encoding="UTF-8">
+      <directory>.cursor/rules</directory>
+      <includes>
+        <include>ddd.mdc</include>
+        <include>fust.mdc</include>
+      </includes>
+    </fileSet>
+    <fileSet filtered="false" encoding="UTF-8">
       <directory></directory>
       <includes>
         <include>.gitignore</include>

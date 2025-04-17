@@ -1,0 +1,268 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Fust 微服务开发框架 - 开发规范
+
+## Model 规范与规则
+
+### 通用要求
+- Model 类必须使用 `@Table` 注解标明对应的数据库表名和 schema
+- 所有主键必须使用 `@Id` 注解标识
+- 自动生成/填充的字段需要使用 `@DbAutoColumn` 注解标识，例如 createdAt, updatedAt 等时间字段
+- Model 类应该是 Plain Java Object，不要包含业务逻辑
+- 所有属性应当使用包装类型而非基本类型，例如使用 `Long` 而非 `long`
+
+### @Table 注解规范
+- 必须指定真实的表名，推荐在类中定义表名常量
+- 若数据库有 schema，必须在注解中指定 schema
+- 示例: `@Table(name = UserModel.TABLE_NAME, schema = "user")`
+
+### @Id 注解规范
+- 每个 Model 必须有一个属性被标记为 `@Id`
+- 通常情况下，`@Id` 应用于主键字段，如 `id`
+- 若使用手动设置主键的策略，则需添加 `@ManualId` 注解
+
+### @DbAutoColumn 注解规范
+- 应用于由数据库自动生成的列，如创建时间、更新时间等
+- 被 `@DbAutoColumn` 标记的字段在创建和更新操作中会被忽略
+- 示例: `@DbAutoColumn private LocalDateTime createdAt;`
+
+## Dao 规范与规则
+
+### 通用要求
+- 所有 Dao 接口必须使用 `@Mapper` 注解标识
+- Dao 接口必须继承 `TemplateDao<T>` 接口，其中 T 为对应的 Model 类
+- 所有 Dao 方法必须使用 MyBatis 注解方式定义，避免使用 XML 配置
+
+### TemplateDao 使用规范
+- 继承 TemplateDao 后自动获得基础的 CRUD 操作方法
+- 继承的基础方法包括: `create`, `find`, `update`, `remove`, `batchCreate`, `patch`, `batchPatch`
+- 若有特殊需求，可以在 Dao 接口中添加自定义方法
+
+### 自定义方法规范
+- 自定义 Dao 方法必须使用 MyBatis 注解方式定义
+- 常用注解包括: `@Select`, `@Insert`, `@Update`, `@Delete`
+- 复杂查询推荐使用 `@ResultMap` 注解映射结果集
+- 对于批量操作，推荐使用 `@Lang(CollectionDriver.class)` 处理集合参数
+
+### 示例规范
+```java
+@Mapper
+public interface UserDao extends TemplateDao<UserModel> {
+    // 表名常量定义
+    String TABLE_NAME = "t_user";
+    
+    // 自定义查询方法
+    @Select({"SELECT * FROM", TABLE_NAME, "WHERE name = #{name}"})
+    @ResultMap("UserModel")
+    UserModel findByName(@Param("name") String name);
+    
+    // 批量查询使用 CollectionDriver
+    @Lang(CollectionDriver.class)
+    @Select("SELECT * FROM " + TABLE_NAME + " WHERE id IN @ids")
+    @ResultMap("UserModel")
+    List<UserModel> findByIds(@Param("ids") Collection<Long> ids);
+}
+```
+
+## 测试规范与规则
+
+### 测试分层规范
+- **单元测试**: 针对业务逻辑层（Service）和工具类，使用 Mockito 模拟依赖
+- **DAO层测试**: 使用 Spring Boot 测试框架进行数据访问层测试，通常使用内存数据库
+- **集成测试**: 测试多个组件的协作，验证端到端功能
+
+### 单元测试规范（Service层）
+- 使用 JUnit 5 进行单元测试
+- 使用 Mockito 模拟外部依赖
+- 不要使用 SpringBoot 的测试注解进行单元测试
+- 针对单一功能点编写测试
+- 测试类和方法名称要清晰表达测试意图
+
+### 单元测试示例（Service层）
+```java
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+    @Mock
+    private UserDao userDao;
+    
+    @InjectMocks
+    private UserServiceImpl userService;
+    
+    @Test
+    void testGetUserById_WhenExists_ReturnsUser() {
+        // Arrange
+        UserModel mockUser = new UserModel();
+        mockUser.setId(1L);
+        when(userDao.find(1L)).thenReturn(mockUser);
+        
+        // Act
+        UserModel result = userService.getUserById(1L);
+        
+        // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(userDao, times(1)).find(1L);
+    }
+}
+```
+
+### DAO层测试规范
+- 使用 Spring Boot 的测试框架进行 DAO 层测试
+- 使用 `@SpringBootTest` 或专用于数据访问的 `@DataJpaTest` 注解
+- 使用 `@ActiveProfiles("test")` 激活测试专用配置
+- 可以使用内存数据库（如H2）简化测试环境搭建
+- 测试所有 DAO 方法，包括 TemplateDao 提供的基础方法和自定义方法
+
+### DAO层测试示例
+```java
+@SpringBootTest
+@ActiveProfiles("test")
+class UserDaoTest {
+    
+    @Autowired
+    private UserDao userDao;
+    
+    private UserModel createUser(String username) {
+        UserModel user = new UserModel();
+        user.setBirthday(LocalDate.of(1998, 4, 4));
+        user.setName(username);
+        userDao.create(user);
+        return user;
+    }
+    
+    @Test
+    void testFind() {
+        UserModel user = userDao.find(1L);
+        assertNotNull(user);
+        assertEquals("User 1", user.getName());
+    }
+    
+    @Test
+    void testCreate() {
+        UserModel user = new UserModel();
+        user.setBirthday(LocalDate.of(1998, 4, 4));
+        user.setName("User 4");
+        
+        boolean result = userDao.create(user);
+        assertTrue(result);
+        assertNotNull(user.getId());
+        
+        UserModel saved = userDao.find(user.getId());
+        assertNotNull(saved);
+        assertEquals("User 4", saved.getName());
+    }
+    
+    @Test
+    void testUpdate() {
+        UserModel user = createUser("user update");
+        assertNotNull(user);
+        
+        user.setName("更新的名称");
+        boolean result = userDao.update(user);
+        assertTrue(result);
+        
+        UserModel updated = userDao.find(user.getId());
+        assertNotNull(updated);
+        assertEquals("更新的名称", updated.getName());
+    }
+    
+    @Test
+    void testRemove() {
+        boolean result = userDao.remove(2L);
+        assertTrue(result);
+        
+        UserModel deleted = userDao.find(2L);
+        assertNull(deleted);
+    }
+    
+    @Test
+    void testPatch() {
+        UserModel user = createUser("user patch");
+        UserModel partialUser = new UserModel();
+        partialUser.setId(user.getId());
+        partialUser.setName("部分更新名称");
+        
+        boolean result = userDao.patch(partialUser);
+        assertTrue(result);
+        
+        UserModel patched = userDao.find(user.getId());
+        assertNotNull(patched);
+        assertEquals("部分更新名称", patched.getName());
+        // 生日应保持不变
+        assertNotNull(patched.getBirthday());
+    }
+    
+    @Test
+    void testFindByIds() {
+        List<Long> userIds = Arrays.asList(1L, 3L);
+        List<UserModel> users = userDao.findByIds(userIds);
+        assertNotNull(users);
+        assertEquals(2, users.size());
+    }
+}
+```
+
+### DAO层测试环境配置示例
+```java
+@Profile("test")
+@Configuration
+@EnableCaching
+public class TestBeanConfig {
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+                .setName("demo_yoda") // 数据库名
+                .setType(EmbeddedDatabaseType.H2) // 内存数据类型: h2 database
+                .addScript("classpath:schema-h2.sql") // 加载数据库结构脚本
+                .addScript("classpath:data-h2.sql") // 加载初始数据脚本
+                .build();
+    }
+}
+```
+
+### 集成测试规范
+- 使用 `@SpringBootTest` 进行完整应用上下文测试
+- 使用 `@WebMvcTest` 进行控制器层测试
+- 使用 `@ActiveProfiles("test")` 激活测试配置
+- 使用 `@Transactional` 确保测试方法间的数据隔离
+
+### 集成测试示例
+```java
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
+class UserServiceIntegrationTest {
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private UserDao userDao;
+    
+    @Test
+    void testCreateAndFindUser() {
+        // Arrange
+        UserModel user = new UserModel();
+        user.setName("Test User");
+        
+        // Act
+        boolean created = userService.createUser(user);
+        UserModel found = userService.getUserById(user.getId());
+        
+        // Assert
+        assertTrue(created);
+        assertNotNull(found);
+        assertEquals("Test User", found.getName());
+    }
+}
+```
+
+### 测试最佳实践
+- 确保测试覆盖正常路径和异常路径
+- 编写可重复、快速和独立的测试
+- 避免测试间的状态依赖
+- 使用恰当的断言验证测试结果
+- 测试类应保持与被测试类相同的包结构
+- 单元测试文件名应以 `Test` 结尾，集成测试文件名可以以 `IT` 结尾 

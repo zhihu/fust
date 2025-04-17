@@ -154,6 +154,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
+@Table(name = "yd_user", schema="demo_yoda")
 public class UserModel {
     private Long id;
     private LocalDateTime createdAt;
@@ -174,8 +175,6 @@ FUST框架提供了`TemplateDao`来简化MyBatis的使用，下面我们将创�
 ```java
 package demo.yoda.business.dao;
 
-import com.zhihu.fust.core.dao.PageInfo;
-import com.zhihu.fust.core.dao.PageRequest;
 import com.zhihu.fust.spring.mybatis.TemplateDao;
 import demo.yoda.business.model.UserModel;
 import org.apache.ibatis.annotations.*;
@@ -233,8 +232,11 @@ FUST框架支持利用MyBatis的LangDriver机制，简化批量操作，特别�
 String TABLE_NAME = "yd_user";
 
 // 使用CollectionDriver处理集合参数
-@Lang(CollectionDriver.class) 
-@Select("SELECT * FROM " + TABLE_NAME + " WHERE id IN @ids") 
+/**
+ * 根据ID批量查询用户
+ */
+@Lang(CollectionDriver.class)
+@Select("SELECT * FROM " + TABLE_NAME + " WHERE id IN @ids")
 @ResultMap("UserModel")
 List<UserModel> findByIds(@Param("ids") Collection<Long> ids);
 
@@ -338,14 +340,6 @@ INSERT INTO `yd_user` (`id`, `birthday`, `name`) VALUES
 (3, '1995-03-03', 'User 3');
 ```
 
-在`demo-yoda-business`模块中创建`src/test/resources/application-test.properties`文件，配置H2初始化：
-
-```properties
-spring.sql.init.schema-locations=classpath:schema-h2.sql
-spring.sql.init.data-locations=classpath:data-h2.sql
-spring.sql.init.mode=always
-```
-
 ### 编写DAO层单元测试
 
 在`demo-yoda-business`模块中创建`src/test/java/demo/yoda/business/dao/UserDaoTest.java`文件：
@@ -370,88 +364,95 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
 class UserDaoTest {
     
     @Autowired
     private UserDao userDao;
-    
+
+    private UserModel createUser(String username) {
+        UserModel user = new UserModel();
+        user.setBirthday(LocalDate.of(1998, 4, 4));
+        user.setName(username);
+        userDao.create(user);
+        return user;
+    }
+
     @Test
     void testFind() {
         UserModel user = userDao.find(1L);
         assertNotNull(user);
         assertEquals("User 1", user.getName());
     }
-    
-    @Test
-    void testFindByName() {
-        Optional<UserModel> user = userDao.findByName("User 2");
-        assertTrue(user.isPresent());
-        assertEquals(2L, user.get().getId());
-    }
-    
-    @Test
-    void testFindByPage() {
-        PageRequest pageRequest = PageRequest.of(0, 2);
-        PageInfo<UserModel> pageInfo = userDao.findByPage(pageRequest);
-        
-        assertEquals(3, pageInfo.getTotal());
-        assertEquals(2, pageInfo.getList().size());
-    }
-    
+
     @Test
     void testCreate() {
         UserModel user = new UserModel();
         user.setBirthday(LocalDate.of(1998, 4, 4));
         user.setName("User 4");
-        
+
         boolean result = userDao.create(user);
         assertTrue(result);
         assertNotNull(user.getId());
-        
+
         UserModel saved = userDao.find(user.getId());
         assertNotNull(saved);
         assertEquals("User 4", saved.getName());
     }
-    
+
     @Test
     void testUpdate() {
-        UserModel user = userDao.find(3L);
+        UserModel user = createUser("user update");
         assertNotNull(user);
-        
-        user.setName("Updated Name");
+
+        user.setName("更新的名称");
         boolean result = userDao.update(user);
         assertTrue(result);
-        
-        UserModel updated = userDao.find(3L);
+
+        UserModel updated = userDao.find(user.getId());
         assertNotNull(updated);
-        assertEquals("Updated Name", updated.getName());
+        assertEquals("更新的名称", updated.getName());
     }
-    
+
     @Test
     void testRemove() {
         boolean result = userDao.remove(2L);
         assertTrue(result);
-        
+
         UserModel deleted = userDao.find(2L);
         assertNull(deleted);
     }
-    
+
     @Test
     void testPatch() {
+        UserModel user = createUser("user patch");
         UserModel partialUser = new UserModel();
-        partialUser.setId(1L);
-        partialUser.setName("Patched Name");
-        
+        partialUser.setId(user.getId());
+        partialUser.setName("部分更新名称");
+
         boolean result = userDao.patch(partialUser);
         assertTrue(result);
-        
-        UserModel patched = userDao.find(1L);
+
+        UserModel patched = userDao.find(user.getId());
         assertNotNull(patched);
-        assertEquals("Patched Name", patched.getName());
-        // Birthday should remain unchanged
+        assertEquals("部分更新名称", patched.getName());
+        // 生日应保持不变
         assertNotNull(patched.getBirthday());
     }
+
+    @Test
+    void testFindByIds() {
+        // 准备要查询的ID列表
+        List<Long> userIds = Arrays.asList(100L, 300L);
+
+        // 调用批量查询方法
+        List<UserModel> users = userDao.findByIds(userIds);
+
+        // 验证结果
+        assertNotNull(users);
+        assertEquals(2, users.size());
+
+    }
+
 }
 ```
 
@@ -463,8 +464,7 @@ class UserDaoTest {
 2. 使用JSON文件配置数据源
 3. 创建实体模型类
 4. 使用MyBatis的注解方式定义DAO接口，实现TemplateDao的基本CRUD操作
-5. 实现分页查询功能
-6. 使用CollectionDriver实现高效的批量查询
-7. 利用H2内存数据库进行DAO层测试
+5. 使用CollectionDriver实现高效的批量查询
+6. 利用H2内存数据库进行DAO层测试
 
 通过上述步骤，我们完成了`demo-yoda`项目的数据访问层设计与实现。在下一章中，我们将基于数据访问层构建业务服务层。 
