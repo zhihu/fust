@@ -54,12 +54,6 @@ demo-yoda/
         <groupId>demo.yoda</groupId>
         <artifactId>demo-yoda-business</artifactId>
     </dependency>
-    
-    <!-- Telemetry支持 -->
-    <dependency>
-        <groupId>com.zhihu.fust</groupId>
-        <artifactId>fust-telemetry-sdk</artifactId>
-    </dependency>
 </dependencies>
 
 <build>
@@ -105,10 +99,6 @@ demo-yoda/
 ```bash
 # macOS
 brew install bufbuild/buf/buf
-
-# Linux
-curl -sSL "https://github.com/bufbuild/buf/releases/download/v1.28.1/buf-$(uname -s)-$(uname -m)" -o /usr/local/bin/buf
-chmod +x /usr/local/bin/buf
 ```
 
 ### 配置Buf
@@ -124,15 +114,6 @@ plugins:
   # 生成Java gRPC服务类
   - plugin: buf.build/grpc/java:v1.61.0
     out: ./demo-yoda-grpc/gen-src/protobuf/java
-  # 如果需要生成Go代码
-  - plugin: buf.build/protocolbuffers/go
-    out: ./demo-yoda-grpc/gen-src/gen-go
-  # 如果需要生成Go gRPC代码
-  - plugin: buf.build/grpc/go:v1.3.0
-    out: ./demo-yoda-grpc/gen-src/gen-go
-  # 如果需要生成gRPC Gateway
-  - plugin: buf.build/grpc-ecosystem/gateway:v2.19.0
-    out: ./demo-yoda-grpc/gen-src/gen-go-gateway
 ```
 
 在`proto`目录创建`buf.yaml`文件，配置依赖和lint规则：
@@ -169,7 +150,6 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "demo/yoda/user";
 option java_multiple_files = true;
 option java_outer_classname = "UserProto";
 option java_package = "demo.yoda.proto.user";
@@ -203,13 +183,6 @@ service UserService {
   rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {
     option (google.api.http) = {
       delete: "/api/v1/users/{id}"
-    };
-  }
-  
-  // 获取所有用户
-  rpc ListUsers (google.protobuf.Empty) returns (ListUsersResponse) {
-    option (google.api.http) = {
-      get: "/api/v1/users"
     };
   }
 }
@@ -251,10 +224,6 @@ message DeleteUserResponse {
   bool success = 1;
 }
 
-// 用户列表响应
-message ListUsersResponse {
-  repeated User users = 1;
-}
 ```
 
 ### 生成代码
@@ -516,25 +485,6 @@ public class UserServiceHandler extends UserServiceGrpc.UserServiceImplBase {
                     .withDescription("Internal error: " + e.getMessage())));
         }
     }
-    
-    @Override
-    public void listUsers(Empty request, StreamObserver<ListUsersResponse> responseObserver) {
-        try {
-            log.info("Listing all users");
-            
-            List<UserModel> userModels = userService.getAllUsers();
-            ListUsersResponse response = ListUsersResponse.newBuilder()
-                    .addAllUsers(UserProtoConverter.toProtoList(userModels))
-                    .build();
-            
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            log.error("Error listing users", e);
-            responseObserver.onError(new StatusRuntimeException(Status.INTERNAL
-                    .withDescription("Internal error: " + e.getMessage())));
-        }
-    }
 }
 ```
 
@@ -560,15 +510,12 @@ import org.springframework.stereotype.Component;
 public class GrpcServer {
     
     private final UserServiceHandler userServiceHandler;
-    
-    @Value("${grpc.server.port:9090}")
-    private int grpcPort;
-    
+        
     /**
      * 启动gRPC服务
      */
     public void start() {
-        GrpcServerBuilder builder = GrpcServerBuilder.builder(grpcPort);
+        GrpcServerBuilder builder = GrpcServerBuilder.builder(9090);
         // 启用HTTP JSON转码，支持通过HTTP调用gRPC服务
         builder.enableHttpJsonTranscoding(true)
                 .addService(userServiceHandler)
@@ -601,39 +548,14 @@ import org.springframework.context.annotation.Import;
 public class GrpcMain {
     
     public static void main(String[] args) {
-        // 初始化遥测SDK
-        TelemetryInitializer.init();
-        
-        // 创建Spring应用
         SpringApplication application = new SpringApplication(GrpcMain.class);
-        // 关闭banner显示
         application.setBannerMode(Banner.Mode.OFF);
-        // 设置为非Web应用
         application.setWebApplicationType(WebApplicationType.NONE);
-        
-        // 启动Spring上下文
         ConfigurableApplicationContext context = application.run(args);
-        
-        // 获取GrpcServer并启动
         GrpcServer server = context.getBean(GrpcServer.class);
         server.start();
     }
 }
-```
-
-## 配置应用属性
-
-在`demo-yoda-grpc`模块的`src/main/resources/application.properties`文件中配置应用属性：
-
-```properties
-# 应用名称
-spring.application.name=demo-yoda-grpc
-
-# gRPC服务器端口
-grpc.server.port=9090
-
-# 环境配置
-env=dev
 ```
 
 ## 测试gRPC服务
@@ -653,7 +575,6 @@ http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/CreateUser/POST
 http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/GetUser/POST?debug_form_is_open=true
 http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/UpdateUser/POST?debug_form_is_open=true
 http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/DeleteUser/POST?debug_form_is_open=true
-http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/ListUsers/POST?debug_form_is_open=true
 ```
 
 在这些页面上，你可以：
@@ -664,74 +585,14 @@ http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/ListUsers/POST?
 
 这是开发和测试gRPC服务最简便的方式，无需安装额外的工具。
 
-### 使用命令行工具（grpcurl）
-
-如果你喜欢命令行工具，可以使用grpcurl测试gRPC服务：
-
-```bash
-# 安装grpcurl（Mac用户）
-brew install grpcurl
-
-# 列出服务
-grpcurl -plaintext localhost:9090 list
-
-# 列出服务方法
-grpcurl -plaintext localhost:9090 list demo.yoda.user.UserService
-
-# 创建用户
-grpcurl -plaintext -d '{"name": "张三", "birthday": "1990-01-01"}' \
-  localhost:9090 demo.yoda.user.UserService/CreateUser
-
-# 获取用户
-grpcurl -plaintext -d '{"id": 1}' \
-  localhost:9090 demo.yoda.user.UserService/GetUser
-
-# 更新用户
-grpcurl -plaintext -d '{"id": 1, "name": "张三(已更新)", "birthday": "1990-01-01"}' \
-  localhost:9090 demo.yoda.user.UserService/UpdateUser
-
-# 删除用户
-grpcurl -plaintext -d '{"id": 1}' \
-  localhost:9090 demo.yoda.user.UserService/DeleteUser
-
-# 获取所有用户
-grpcurl -plaintext localhost:9090 demo.yoda.user.UserService/ListUsers
-```
-
-### 使用HTTP API调用gRPC服务
-
-由于我们启用了HTTP JSON转码功能，你可以使用普通的HTTP请求调用gRPC服务，这对于前端开发和测试非常方便：
-
-#### 使用curl命令行工具
-
-```bash
-# 创建用户（REST风格API）
-curl -X POST http://localhost:9090/api/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{"name": "张三", "birthday": "1990-01-01"}'
-
-# 获取用户（REST风格API）
-curl http://localhost:9090/api/v1/users/1
-
-# 更新用户（REST风格API）
-curl -X PUT http://localhost:9090/api/v1/users/1 \
-  -H "Content-Type: application/json" \
-  -d '{"name": "张三(已更新)", "birthday": "1990-01-01"}'
-
-# 删除用户（REST风格API）
-curl -X DELETE http://localhost:9090/api/v1/users/1
-
-# 获取所有用户（REST风格API）
-curl http://localhost:9090/api/v1/users
-```
 
 #### 直接调用gRPC方法
 
-除了REST风格API外，你还可以直接通过HTTP调用gRPC方法：
+直接通过HTTP调用gRPC方法：
 
 ```bash
 # 创建用户（直接调用gRPC方法）
-curl 'http://localhost:9090/demo.yoda.user.UserService/CreateUser' \
+curl 'http://localhost:9090/com.zhihu.user.UserService/CreateUser' \
   -H 'content-type: application/json; charset=utf-8' \
   --data-raw '{"name":"张三","birthday":"1990-01-01"}'
 
@@ -758,90 +619,38 @@ curl 'http://localhost:9090/demo.yoda.user.UserService/ListUsers' \
 
 这种方式对于没有gRPC客户端的环境特别有用，例如在浏览器中使用AJAX/fetch调用gRPC服务。
 
-## 实现gRPC客户端
+## 使用 gRPC 客户端
 
-我们也可以使用FUST框架实现gRPC客户端。在FUST框架中，我们提供了`fust-boot-grpc-client`模块来简化gRPC客户端的开发。
+> grpc 客户在引入 fust-boot-grpc 时会自动引入
 
-创建`demo-yoda-client`模块，并在`pom.xml`中添加依赖：
+客服端的使用也需要提前编译好协议代码，这里编译方法与服务端一样，这里不再重复。
 
-```xml
-<dependency>
-    <groupId>com.zhihu.fust</groupId>
-    <artifactId>fust-boot-grpc-client</artifactId>
-</dependency>
 
-<!-- 引入生成的Proto代码 -->
-<dependency>
-    <groupId>demo.yoda</groupId>
-    <artifactId>demo-yoda-grpc</artifactId>
-    <classifier>proto</classifier>
-</dependency>
-```
-
-然后，创建gRPC客户端配置：
+创建gRPC客户端配置：
 
 ```java
-@Configuration
-public class GrpcClientConfig {
-    
-    @Bean
-    public UserServiceGrpc.UserServiceBlockingStub userServiceStub(
-            @Value("${grpc.client.userService.host:localhost}") String host,
-            @Value("${grpc.client.userService.port:9090}") int port) {
-        
-        return GrpcClientBuilder.builder(host, port)
-                .build()
-                .createBlockingStub(UserServiceGrpc::newBlockingStub);
-    }
-}
+// 使用 fust 的 GrpcClientBuilder
+import com.zhihu.fust.armeria.grpc.client.GrpcClientBuilder;
+
+UserServiceGrpc.UserServiceBlockingStub userServiceGrpc = GrpcClientBuilder
+        .builder(UserServiceGrpc.UserServiceBlockingStub.class)
+        .endpoint("127.0.0.1", 9090) // 服务IP和端口
+        .build();
 ```
 
-最后，我们可以使用这个客户端调用gRPC服务：
+使用客户端调用服务
 
 ```java
-@Service
-@RequiredArgsConstructor
-public class UserClient {
-    
-    private final UserServiceGrpc.UserServiceBlockingStub userServiceStub;
-    
-    public User createUser(String name, String birthday) {
-        CreateUserRequest request = CreateUserRequest.newBuilder()
-                .setName(name)
-                .setBirthday(birthday)
-                .build();
-        return userServiceStub.createUser(request);
-    }
-    
-    public User getUser(long id) {
-        GetUserRequest request = GetUserRequest.newBuilder()
-                .setId(id)
-                .build();
-        return userServiceStub.getUser(request);
-    }
-    
-    public User updateUser(long id, String name, String birthday) {
-        UpdateUserRequest request = UpdateUserRequest.newBuilder()
-                .setId(id)
-                .setName(name)
-                .setBirthday(birthday)
-                .build();
-        return userServiceStub.updateUser(request);
-    }
-    
-    public boolean deleteUser(long id) {
-        DeleteUserRequest request = DeleteUserRequest.newBuilder()
-                .setId(id)
-                .build();
-        DeleteUserResponse response = userServiceStub.deleteUser(request);
-        return response.getSuccess();
-    }
-    
-    public List<User> listUsers() {
-        ListUsersResponse response = userServiceStub.listUsers(Empty.getDefaultInstance());
-        return response.getUsersList();
-    }
-}
+User user = userServiceGrpc.createUser(CreateUserRequest.newBuilder()
+        .setName("李三")
+        .setBirthday("1991-02-21")
+        .build());
+
+User queryUser = userServiceGrpc.getUser(GetUserRequest.newBuilder()
+        .setId(user.getId())
+        .build());
+System.out.println(queryUser);
+
 ```
 
 ## 总结
@@ -853,7 +662,7 @@ public class UserClient {
 3. 使用Buf生成Java代码
 4. 实现gRPC服务处理器
 5. 配置和启动gRPC服务器
-6. 使用多种方式测试gRPC服务
+6. 测试gRPC服务
 7. 实现gRPC客户端
 
 通过FUST框架，我们可以更加方便地开发和部署gRPC服务，为微服务之间提供高效的通信方式。同时，通过启用HTTP JSON转码，我们还可以在不同场景下灵活选择通信协议，既可以使用高性能的gRPC，也可以使用普遍支持的HTTP API。 

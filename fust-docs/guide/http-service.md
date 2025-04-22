@@ -22,13 +22,6 @@ HTTP服务是微服务架构中最常见的对外接口方式，FUST框架基于
     <groupId>com.zhihu.fust</groupId>
     <artifactId>fust-boot-web</artifactId>
 </dependency>
-
-<!-- Swagger API文档 -->
-<dependency>
-    <groupId>org.springdoc</groupId>
-    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>2.1.0</version>
-</dependency>
 ```
 
 `fust-boot-web`依赖会自动引入Spring Web MVC和相关组件，简化Web应用的开发。
@@ -41,35 +34,24 @@ DTO（数据传输对象）用于API层的数据交换，它与领域模型（Mo
 
 ```java
 package demo.yoda.api.dto;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
 import java.time.LocalDate;
-
+/**
+ * 用户DTO
+ */
 @Data
-@Schema(description = "用户DTO")
 public class UserDto {
-    
-    @Schema(description = "用户ID", example = "1")
     private Long id;
-    
-    @Schema(description = "用户名称", example = "张三")
     private String name;
-    
-    @Schema(description = "用户生日", example = "1990-01-01")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
-    
-    // 不包含createdAt和updatedAt字段，这些是内部字段，不对外暴露
 }
 ```
 
 这个DTO类使用了以下注解：
 
 - `@Data`：Lombok注解，自动生成getter、setter等方法
-- `@Schema`：Swagger注解，用于API文档生成
 - `@JsonFormat`：Jackson注解，指定日期格式
 
 ## 添加转换工具类
@@ -194,26 +176,12 @@ public class WebConfig implements WebMvcConfigurer {
 
 ```java
 package demo.yoda.api.response;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
 @Data
-@Schema(description = "API响应结构")
 public class ApiResponse<T> {
-    
-    @Schema(description = "响应码", example = "200")
     private int code;
-    
-    @Schema(description = "响应消息", example = "操作成功")
     private String message;
-    
-    @Schema(description = "响应数据")
     private T data;
-    
-    /**
-     * 创建成功响应
-     */
     public static <T> ApiResponse<T> success(T data) {
         ApiResponse<T> response = new ApiResponse<>();
         response.setCode(200);
@@ -221,17 +189,11 @@ public class ApiResponse<T> {
         response.setData(data);
         return response;
     }
-    
-    /**
-     * 创建成功响应（无数据）
-     */
+
     public static <T> ApiResponse<T> success() {
         return success(null);
     }
-    
-    /**
-     * 创建失败响应
-     */
+
     public static <T> ApiResponse<T> error(int code, String message) {
         ApiResponse<T> response = new ApiResponse<>();
         response.setCode(code);
@@ -256,9 +218,6 @@ import demo.yoda.api.util.UserConverter;
 import demo.yoda.business.exception.UserNotFoundException;
 import demo.yoda.business.model.UserModel;
 import demo.yoda.business.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -272,139 +231,95 @@ import java.util.Optional;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "用户管理", description = "用户CRUD操作")
 public class UserController {
     
     private final UserService userService;
-    
     @GetMapping("/{id}")
-    @Operation(summary = "根据ID查询用户")
-    public ApiResponse<UserDto> getUserById(
-            @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
-        try {
-            UserModel user = userService.getUserById(id);
-            return ApiResponse.success(UserConverter.toDto(user));
-        } catch (UserNotFoundException e) {
-            log.warn("User not found: {}", id);
-            return ApiResponse.error(404, e.getMessage());
+    public ApiResponse<UserDto> getUserById(@PathVariable Long id) {
+        UserModel user = userService.getUserById(id);
+        if (user == null) {
+            throw new UserNotFoundException(id);
         }
+        return ApiResponse.success(UserConverter.toDto(user));
     }
-    
-    @GetMapping
-    @Operation(summary = "查询所有用户")
-    public ApiResponse<List<UserDto>> getAllUsers() {
-        List<UserModel> users = userService.getAllUsers();
-        return ApiResponse.success(UserConverter.toDtoList(users));
-    }
-    
-    @GetMapping("/name/{name}")
-    @Operation(summary = "根据名称查询用户")
-    public ApiResponse<UserDto> getUserByName(
-            @Parameter(description = "用户名称", required = true) @PathVariable String name) {
-        Optional<UserModel> user = userService.getUserByName(name);
-        return user.map(u -> ApiResponse.success(UserConverter.toDto(u)))
-                .orElse(ApiResponse.error(404, "User not found with name: " + name));
-    }
-    
-    @GetMapping("/birthday/{birthday}")
-    @Operation(summary = "根据生日查询用户")
-    public ApiResponse<List<UserDto>> getUsersByBirthday(
-            @Parameter(description = "生日（格式：yyyy-MM-dd）", required = true) @PathVariable String birthday) {
-        List<UserModel> users = userService.getUsersByBirthday(LocalDate.parse(birthday));
-        return ApiResponse.success(UserConverter.toDtoList(users));
-    }
-    
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "创建用户")
-    public ApiResponse<UserDto> createUser(
-            @Parameter(description = "用户信息", required = true) @RequestBody UserDto userDto) {
+    public ApiResponse<UserDto> createUser(@RequestBody UserDto userDto) {
         UserModel userModel = UserConverter.toModel(userDto);
         boolean created = userService.createUser(userModel);
         if (created) {
-            userDto.setId(userModel.getId());
-            return ApiResponse.success(userDto);
+            return ApiResponse.success(UserConverter.toDto(userModel));
         } else {
             return ApiResponse.error(500, "Failed to create user");
         }
     }
-    
+
     @PutMapping("/{id}")
-    @Operation(summary = "更新用户")
     public ApiResponse<UserDto> updateUser(
-            @Parameter(description = "用户ID", required = true) @PathVariable Long id,
-            @Parameter(description = "用户信息", required = true) @RequestBody UserDto userDto) {
-        userDto.setId(id);
+            @PathVariable Long id,
+            @RequestBody UserDto userDto) {
+        // 确保用户存在
+        UserModel existingUser = userService.getUserById(id);
+        if (existingUser == null) {
+            throw new UserNotFoundException(id);
+        }
+
         UserModel userModel = UserConverter.toModel(userDto);
-        
-        try {
-            // 确保用户存在
-            userService.getUserById(id);
-            
-            boolean updated = userService.updateUser(userModel);
-            if (updated) {
-                return ApiResponse.success(userDto);
-            } else {
-                return ApiResponse.error(500, "Failed to update user");
-            }
-        } catch (UserNotFoundException e) {
-            return ApiResponse.error(404, e.getMessage());
+        userModel.setId(id);
+        boolean updated = userService.updateUser(userModel);
+        if (updated) {
+            return ApiResponse.success(UserConverter.toDto(userModel));
+        } else {
+            return ApiResponse.error(500, "Failed to update user");
         }
     }
-    
+
     @PatchMapping("/{id}")
-    @Operation(summary = "部分更新用户")
     public ApiResponse<UserDto> patchUser(
-            @Parameter(description = "用户ID", required = true) @PathVariable Long id,
-            @Parameter(description = "用户部分信息", required = true) @RequestBody UserDto userDto) {
-        userDto.setId(id);
+            @PathVariable Long id,
+            @RequestBody UserDto userDto) {
+        // 确保用户存在
+        UserModel existingUser = userService.getUserById(id);
+        if (existingUser == null) {
+            throw new UserNotFoundException(id);
+        }
+
         UserModel userModel = UserConverter.toModel(userDto);
-        
-        try {
-            // 确保用户存在
-            UserModel existingUser = userService.getUserById(id);
-            
-            boolean patched = userService.patchUser(userModel);
-            if (patched) {
-                // 重新查询最新数据
-                UserModel updatedUser = userService.getUserById(id);
-                return ApiResponse.success(UserConverter.toDto(updatedUser));
-            } else {
-                return ApiResponse.error(500, "Failed to patch user");
-            }
-        } catch (UserNotFoundException e) {
-            return ApiResponse.error(404, e.getMessage());
+        userModel.setId(id);
+        boolean patched = userService.patchUser(userModel);
+        if (patched) {
+            return ApiResponse.success(UserConverter.toDto(userModel));
+        } else {
+            return ApiResponse.error(500, "Failed to patch user");
         }
     }
-    
+
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除用户")
     public ApiResponse<Void> deleteUser(
-            @Parameter(description = "用户ID", required = true) @PathVariable Long id) {
-        try {
-            // 确保用户存在
-            userService.getUserById(id);
-            
-            boolean deleted = userService.deleteUser(id);
-            if (deleted) {
-                return ApiResponse.success();
-            } else {
-                return ApiResponse.error(500, "Failed to delete user");
-            }
-        } catch (UserNotFoundException e) {
-            return ApiResponse.error(404, e.getMessage());
+            @PathVariable Long id) {
+        // 确保用户存在
+        UserModel existingUser = userService.getUserById(id);
+        if (existingUser == null) {
+            throw new UserNotFoundException(id);
+        }
+
+        boolean deleted = userService.deleteUser(id);
+        if (deleted) {
+            return ApiResponse.success();
+        } else {
+            return ApiResponse.error(500, "Failed to delete user");
         }
     }
-    
+
     @PostMapping("/batch")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "批量创建用户")
     public ApiResponse<List<UserDto>> batchCreateUsers(
-            @Parameter(description = "用户列表", required = true) @RequestBody List<UserDto> userDtos) {
+            @RequestBody List<UserDto> userDtos) {
         List<UserModel> userModels = userDtos.stream()
                 .map(UserConverter::toModel)
                 .toList();
-        
+
         boolean created = userService.batchCreateUsers(userModels);
         if (created) {
             return ApiResponse.success(UserConverter.toDtoList(userModels));
@@ -412,11 +327,10 @@ public class UserController {
             return ApiResponse.error(500, "Failed to batch create users");
         }
     }
-    
+
     @DeleteMapping("/batch")
-    @Operation(summary = "批量删除用户")
     public ApiResponse<Integer> batchDeleteUsers(
-            @Parameter(description = "用户ID列表", required = true) @RequestBody List<Long> ids) {
+            @RequestBody List<Long> ids) {
         int deleted = userService.batchDeleteUsers(ids);
         return ApiResponse.success(deleted);
     }
@@ -429,7 +343,6 @@ public class UserController {
 2. 批量操作：批量创建、批量删除
 3. 按条件查询：按名称查询、按生日查询
 
-每个API端点都添加了Swagger注解，便于生成API文档。
 
 ## 实现全局异常处理
 
@@ -455,7 +368,6 @@ import java.time.format.DateTimeParseException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-    
     @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse<Void> handleUserNotFoundException(UserNotFoundException e) {
@@ -479,43 +391,6 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handleGlobalException(Exception e) {
         log.error("Unexpected error", e);
         return ApiResponse.error(500, "An unexpected error occurred: " + e.getMessage());
-    }
-}
-```
-
-## 配置OpenAPI文档
-
-为了提供API文档，我们配置OpenAPI（Swagger）。
-
-在`demo-yoda-api`模块中创建`src/main/java/demo/yoda/api/config/OpenApiConfig.java`文件：
-
-```java
-package demo.yoda.api.config;
-
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
-public class OpenApiConfig {
-    
-    @Bean
-    public OpenAPI demoYodaOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Demo Yoda API")
-                        .description("Demo Yoda用户管理API")
-                        .version("v1.0.0")
-                        .contact(new Contact()
-                                .name("FUST Team")
-                                .url("https://github.com/zhihu/fust")
-                                .email("fust@example.com"))
-                        .license(new License()
-                                .name("Apache 2.0")
-                                .url("https://www.apache.org/licenses/LICENSE-2.0")));
     }
 }
 ```
@@ -617,7 +492,6 @@ curl -X DELETE http://localhost:8080/api/users/1
 2. 配置Jackson日期转换，确保日期格式正确
 3. 实现用户控制器，提供CRUD操作的REST API
 4. 添加全局异常处理，统一处理API异常
-5. 配置OpenAPI文档，提供API文档
-6. 配置CORS，支持跨域访问
+5. 配置CORS，支持跨域访问
 
 通过完成上述步骤，我们成功地将用户管理功能通过REST API暴露给外部应用。在下一章中，我们将学习如何开发gRPC服务，为系统间通信提供高性能的RPC接口。 

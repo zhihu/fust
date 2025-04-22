@@ -41,7 +41,6 @@ alwaysApply: true
 - 使用 Spring Security 实现安全控制
 - 实现统一的异常处理和日志记录
 - 编写单元测试和集成测试，确保代码质量
-- 使用 Swagger/OpenAPI 生成 API 文档
  
 ### 解决问题时：
 - 全面分析领域模型和业务规则
@@ -65,6 +64,6 @@ alwaysApply: true
   - 实现健康检查
  
 在整个过程中，始终参考：
-- [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/html/)
-- [Domain-Driven Design 参考](https://www.domainlanguage.com/ddd/)
-- [Spring Data JPA 文档](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/)
+- [Spring Boot 官方文档](mdc:https:/docs.spring.io/spring-boot/docs/current/reference/html)
+- [Domain-Driven Design 参考](mdc:https:/www.domainlanguage.com/ddd)
+- [Spring Data JPA 文档](mdc:https:/docs.spring.io/spring-data/jpa/docs/current/reference/html)

@@ -9,8 +9,6 @@
 1. 实现业务规则和流程
 2. 封装和组合底层数据访问操作
 3. 提供事务管理
-4. 实现安全验证和业务校验
-5. 处理异常并转换为业务异常
 
 在FUST框架中，服务层通常使用Spring的`@Service`注解标记，并通过依赖注入获取所需的DAO组件。
 
@@ -197,53 +195,6 @@ public class UserServiceImpl implements UserService {
 4. 使用`@Transactional`管理事务，确保数据一致性
 5. 实现了所有业务方法，并添加了日志记录
 
-## 业务异常处理
-
-在服务层中处理业务异常是一个良好的实践。我们创建一个用户相关的业务异常类。
-
-在`demo-yoda-business`模块中创建`src/main/java/demo/yoda/business/exception/UserNotFoundException.java`文件：
-
-```java
-package demo.yoda.business.exception;
-
-/**
- * 用户不存在异常
- */
-public class UserNotFoundException extends RuntimeException {
-    
-    public UserNotFoundException(Long id) {
-        super("User not found with id: " + id);
-    }
-    
-    public UserNotFoundException(String name) {
-        super("User not found with name: " + name);
-    }
-}
-```
-
-然后，我们修改UserServiceImpl类中的方法，添加异常处理：
-
-```java
-@Override
-public UserModel getUserById(Long id) {
-    log.info("Getting user by ID: {}", id);
-    UserModel user = userDao.find(id);
-    if (user == null) {
-        throw new UserNotFoundException(id);
-    }
-    return user;
-}
-
-@Override
-public Optional<UserModel> getUserByName(String name) {
-    log.info("Getting user by name: {}", name);
-    Optional<UserModel> user = userDao.findByName(name);
-    if (user.isEmpty()) {
-        log.warn("User not found with name: {}", name);
-    }
-    return user;
-}
-```
 
 ## 单元测试UserService
 
@@ -307,11 +258,10 @@ class UserServiceImplTest {
 1. **接口分离** - 为服务定义接口，实现接口和实现分离
 2. **合理分层** - 服务层专注于业务逻辑，不要包含数据访问或表示层逻辑
 3. **事务管理** - 对修改操作使用`@Transactional`注解管理事务
-4. **异常处理** - 捕获底层异常并转换为有意义的业务异常
-5. **日志记录** - 记录关键业务操作和异常情况
-6. **代码测试** - 编写单元测试和集成测试确保代码质量
-7. **依赖注入** - 使用构造函数注入依赖，便于测试
-8. **命名规范** - 使用清晰的方法命名，表达业务意图
+4. **日志记录** - 记录关键业务操作和异常情况
+5. **代码测试** - 编写单元测试和集成测试确保代码质量
+6. **依赖注入** - 使用构造函数注入依赖，便于测试
+7. **命名规范** - 使用清晰的方法命名，表达业务意图
 
 ## 总结
 

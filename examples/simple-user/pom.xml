@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.zhihu.fust</groupId>
+    <artifactId>fust-boot-bom</artifactId>
+    <version>0.1.0</version>
+  </parent>
+  <artifactId>simple-user</artifactId>
+  <groupId>org.example.simple</groupId>
+  <packaging>pom</packaging>
+  <version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.36</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.example.simple</groupId>
+        <artifactId>simple-user-business</artifactId>
+        <version>1.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <build>
+    <plugins>
+      <!-- 代码检查 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.1.2</version>
+        <executions>
+          <execution>
+            <id>validate</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <!-- 指定依赖的 checkstyle 版本 -->
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>9.2</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <!-- checkstyle 规则文件所在位置 -->
+          <configLocation>checkstyle.xml</configLocation>
+          <!-- 是否包含测试资源 -->
+          <includeTestResources>false</includeTestResources>
+          <!-- 是否把错误信息打印到 console -->
+          <logViolationsToConsole>false</logViolationsToConsole>
+          <!-- check 失败时是否阻断编译 -->
+          <failOnViolation>false</failOnViolation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <modules>
+    <module>simple-user-business</module>
+    <module>simple-user-grpc</module>
+    <module>simple-user-api</module>
+  </modules>
+</project>

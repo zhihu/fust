@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  # 生成Java消息类
+  - plugin: buf.build/protocolbuffers/java:v25.2
+    out: ./simple-user-grpc/gen-src/protobuf/java
+  # 生成Java gRPC服务类
+  - plugin: buf.build/grpc/java:v1.61.0
+    out: ./simple-user-grpc/gen-src/protobuf/java

@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package simple.user;
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "UserProto";
+option java_package = "org.example.simple.user.proto";
+
+// 用户服务定义
+service UserService {
+  // 创建用户
+  rpc CreateUser(CreateUserRequest) returns (User);
+  // 获取用户
+  rpc GetUser(GetUserRequest) returns (User);
+
+  // 更新用户
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+
+  // 删除用户
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+// 用户消息定义
+message User {
+  int64 id = 1;
+  string name = 2;
+  string birthday = 3; // 格式：yyyy-MM-dd
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// 创建用户请求
+message CreateUserRequest {
+  string name = 1;
+  string birthday = 2; // 格式：yyyy-MM-dd
+}
+
+// 获取用户请求
+message GetUserRequest {
+  int64 id = 1;
+}
+
+// 更新用户请求
+message UpdateUserRequest {
+  int64 id = 1;
+  string name = 2;
+  string birthday = 3; // 格式：yyyy-MM-dd
+}
+
+// 删除用户请求
+message DeleteUserRequest {
+  int64 id = 1;
+}
+
+// 删除用户响应
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+// 用户列表响应
+message ListUsersResponse {
+  repeated User users = 1;
+}

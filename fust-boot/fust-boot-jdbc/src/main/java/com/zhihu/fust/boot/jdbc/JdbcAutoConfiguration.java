@@ -68,6 +68,11 @@ public class JdbcAutoConfiguration implements ApplicationContextAware {
     }
 
     @Bean
+    public DefaultDataSourceWrapper defaultDataSourceWrapper(JdbcConnectionFactory jdbcConnectionFactory) {
+        return new DefaultDataSourceWrapper(jdbcConnectionFactory);
+    }
+
+    @Bean
     @ConditionalOnMissingBean(DataSourceDiscover.class)
     public DataSourceDiscover defaultDataSourceDiscover() {
         return new DefaultDataSourceDiscover();
