@@ -1,97 +1,151 @@
 #!/bin/bash
 
-# mvn build
+# 定义颜色输出
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-echo "start process services ..."
-# 临时文件
-jars_file="/tmp/build-jars.txt"
-non_app="/tmp/non-app.txt"
+# 定义全局变量
+declare -r ROOT_DIR=$(pwd)
+declare -r EXTRACT_JAR_DIR="${ROOT_DIR}/extract_jar"
+declare -r MODULE_DIR="${ROOT_DIR}/mod_lib"     # mod 依赖，容易变的依赖
+declare -r LIB_DIR="${ROOT_DIR}/lib"            # 通用依赖，不易变的依赖
+declare -r SERVICES_DIR="${ROOT_DIR}/services"   # 服务目录
+declare -r JARS_FILE="/tmp/build-jars.txt"      # 临时文件存储 jar 列表
+declare -r NON_APP="/tmp/non-app.txt"           # 临时文件存储非应用 jar
 
-# 根目录
-root_dir=$(pwd)
+# 输出日志函数
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
 
-# mod 依赖，容易变的依赖
-module_dir="${root_dir}/mod_lib"
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
 
-# 通用依赖，不易变的依赖
-lib_dir="${root_dir}/lib"
+# 清理旧文件和目录
+cleanup_old_files() {
+    log_info "清理旧文件和目录..."
+    rm -rf "${MODULE_DIR}" "${LIB_DIR}" "${SERVICES_DIR}"
+    mkdir -p "${SERVICES_DIR}"
+}
 
-# 服务目录
-services_dir="$(pwd)/services"
+# 查找所有 JAR 文件
+find_all_jars() {
+    log_info "查找所有 JAR 文件..."
+    find "${ROOT_DIR}" -name "*.jar" > "${JARS_FILE}"
+}
 
-# 清理
-rm -rf ${module_dir}
-rm -rf ${lib_dir}
-rm -rf ${services_dir}
+# 解压和合并依赖
+extract_and_merge_dependencies() {
+    log_info "解压和合并依赖..."
+    
+    # 使用新的推荐命令格式解压所有 JAR 文件
+    awk '{print $1}' "${JARS_FILE}" | xargs -I {} java -Djarmode=tools -jar {} extract --layers --launcher --force --destination ${EXTRACT_JAR_DIR} 2>"${NON_APP}"
+    
+    # 创建依赖目录
+    mkdir -p "${LIB_DIR}" "${MODULE_DIR}"
+    
+    # 复制依赖文件
+    cp ${EXTRACT_JAR_DIR}/dependencies/BOOT-INF/lib/*.jar "${LIB_DIR}/"
+    
+    # 处理快照依赖
+    if [ -d "${EXTRACT_JAR_DIR}/snapshot-dependencies/BOOT-INF/lib/" ]; then
+        cp ${EXTRACT_JAR_DIR}/snapshot-dependencies/BOOT-INF/lib/*.jar "${LIB_DIR}/"
+    fi
+    
+    # 处理应用依赖
+    if [ -d "${EXTRACT_JAR_DIR}/application/BOOT-INF/lib/" ]; then
+        cp ${EXTRACT_JAR_DIR}/application/BOOT-INF/lib/*.jar "${MODULE_DIR}/"
+    fi
+    
+    # 清理临时目录
+    rm -rf ${EXTRACT_JAR_DIR}
+}
 
-# enter 服务目录
-mkdir ${services_dir}
-cd ${services_dir}
+# 创建服务软链接
+create_service_symlinks() {
+    local service_name="$1"
+    local service_dir="$2"
+    
+    cd "${service_dir}" || exit 1
+    
+    while read -r layer_dep_path; do
+        if [[ "${layer_dep_path}" == *".jar"* ]]; then
+            # 移除双引号并提取 JAR 路径
+            local lib_path=$(echo "${layer_dep_path}" | tr -d '"' | awk '{print $NF}')
+            # 获取 jar 名称
+            local lib_name=$(echo "${lib_path}" | awk -F/ '{print $NF}')
+            # 创建软链接，使用 -f 强制创建并忽略错误输出
+            ln -sf "${LIB_DIR}/${lib_name}" "${lib_path}" 2>/dev/null
+        fi
+    done < "BOOT-INF/classpath.idx"
+}
 
-# 查找所有 jar
-find ${root_dir} -name "*.jar" >${jars_file}
+# 处理单个服务
+process_service() {
+    local jar_path="$1"
+    local service_name=$(echo "${jar_path}" | awk -F/ '{print $(NF-2)}')
+    
+    if grep -q "${service_name}" "${NON_APP}"; then
+        log_info "跳过非应用 JAR: ${service_name}"
+        return
+    fi
+    
+    log_info "处理服务: ${service_name}"
+    local service_dir="${SERVICES_DIR}/${service_name}"
+    mkdir -p "${service_dir}"
+    
+    # 解压 JAR 到服务目录
+    unzip -q "${jar_path}" -d "${service_dir}"
+    rm -rf "${service_dir}/BOOT-INF/lib/*"
+    
+    # 创建依赖软链接
+    create_service_symlinks "${service_name}" "${service_dir}"
+    
+    # 清理原始 JAR 目录
+    local target_dir=$(dirname "${jar_path}")
+    rm -rf "${target_dir}"
+}
 
-# 解压分层依赖
-awk '{print $1}' ${jars_file} | xargs -I {} java -Djarmode=layertools -jar {} extract 2>${non_app}
-
-# 合并分层依赖
-mkdir -p ${lib_dir}
-mkdir -p ${module_dir}
-
-cp dependencies/BOOT-INF/lib/*.jar ${lib_dir}/
-
-if [ -d "snapshot-dependencies/BOOT-INF/lib/" ]; then
-  cp snapshot-dependencies/BOOT-INF/lib/*.jar ${lib_dir}/
-fi
-
-# 合并 application 依赖到 mod 依赖
-if [ -d "application/BOOT-INF/lib/" ]; then
-  cp application/BOOT-INF/lib/*.jar ${module_dir}/
-fi
-
-# 合并本地模块依赖到 mod 依赖
-if [ -d "module-dependencies/BOOT-INF/lib/" ]; then
-  cp module-dependencies/BOOT-INF/lib/*.jar ${module_dir}/
-fi
-
-# 清理分层
-rm -rf application/
-rm -rf dependencies/
-rm -rf snapshot-dependencies/
-rm -rf spring-boot-loader/
-rm -rf module-dependencies/
-
-# 创建服务执行目录
-cat ${jars_file} | while read line; do #cat命令的输出作为read命令的输入,read读到的值放在line中。line为读取文件行内容的变量
-  service_name=$(echo ${line} | awk -F/ '{print $(NF-2)}')
-  if grep -q "${service_name}" ${non_app}; then
-    echo "non app ${service_name}"
-  else
-    # 服务目录
-    echo "process service ${service_name}"
-    service_dir=$(pwd)/${service_name}
-    mkdir ${service_dir}
-    cd ${service_dir}
-    # 解压到服务目录
-    unzip -q ${line}
-    rm -rf BOOT-INF/lib/*
-    # link all lib jars
-    cat "${service_dir}/BOOT-INF/classpath.idx" | while read layer_dep_path; do
-      if [[ "${layer_dep_path}" == *".jar"* ]]; then
-        # 移除双引号并提起 JAR 路径
-        lib_path=$(echo $layer_dep_path | tr -d '"' | awk '{print $NF}')
-        # 获取 jar 名称
-        lib_name=$(echo $lib_path | awk -F/ '{print $NF}')
-        # 创建软链接
-        ln -s "${lib_dir}/$lib_name" $lib_path
-      fi
-    done
-    target_dir=$(dirname "${line}")
-    rm -rf ${target_dir}
-    # 返回上层目录
-    cd ..
-  fi
-done
+# 处理所有服务
+process_all_services() {
+    log_info "开始处理所有服务..."
+    cd "${SERVICES_DIR}" || exit 1
+    
+    while read -r jar_path; do
+        process_service "${jar_path}"
+    done < "${JARS_FILE}"
+}
 
 # 清理临时文件
-rm -rf $non_app ${jars_file}
+cleanup_temp_files() {
+    log_info "清理临时文件..."
+    rm -f "${NON_APP}" "${JARS_FILE}"
+}
+
+# 显示目录结构
+show_directory_structure() {
+    log_info "当前目录结构:"
+    echo -e "${GREEN}"
+    tree -L 3 "${ROOT_DIR}" 2>/dev/null || {
+        # 如果 tree 命令不可用，使用 ls 替代
+        find "${ROOT_DIR}" -maxdepth 3 -type d | sed 's/[^/]*\//  /g'
+    }
+    echo -e "${NC}"
+}
+
+# 主函数
+main() {
+    log_info "开始构建服务..."
+    
+    cleanup_old_files
+    find_all_jars
+    extract_and_merge_dependencies
+    process_all_services
+    cleanup_temp_files    
+    log_info "构建完成！"
+}
+
+# 执行主函数
+main

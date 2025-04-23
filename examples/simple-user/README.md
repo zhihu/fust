@@ -147,16 +147,16 @@ http://localhost:9090/_docs/
 2. 用户服务调试页面：
 ```
 # 创建用户
-http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/CreateUser/POST?debug_form_is_open=true
+http://localhost:9090/_docs/#/methods/simple.user.UserService/CreateUser/POST?debug_form_is_open=true
 
 # 获取用户
-http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/GetUser/POST?debug_form_is_open=true
+http://localhost:9090/_docs/#/methods/simple.user.UserService/GetUser/POST?debug_form_is_open=true
 
 # 更新用户
-http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/UpdateUser/POST?debug_form_is_open=true
+http://localhost:9090/_docs/#/methods/simple.user.UserService/UpdateUser/POST?debug_form_is_open=true
 
 # 删除用户
-http://localhost:9090/_docs/#/methods/demo.yoda.user.UserService/DeleteUser/POST?debug_form_is_open=true
+http://localhost:9090/_docs/#/methods/simple.user.UserService/DeleteUser/POST?debug_form_is_open=true
 ```
 
 ##### HTTP 访问 gRPC 服务 
