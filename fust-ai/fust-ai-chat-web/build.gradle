@@ -1,0 +1,15 @@
+plugins {
+    id 'com.zhihu.fust.java-conventions'
+}
+
+dependencies {
+    api project(":fust-spring:fust-spring-jdbc")
+    api project(":fust-spring:fust-spring-mybatis")
+    api 'org.springframework.boot:spring-boot-starter-webflux'
+    api 'org.springframework.ai:spring-ai-openai'
+    api 'org.springframework.ai:spring-ai-autoconfigure-model-chat-memory'
+    api 'org.springframework.ai:spring-ai-advisors-vector-store'
+    implementation 'cn.bigmodel.openapi:oapi-java-sdk:release-V4-2.4.1'
+}
+
+description = 'fust-ai-chat-web'

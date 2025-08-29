@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.zhihu.fust</groupId>
         <artifactId>fust-boot-bom</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
     </parent>
 
     <artifactId>${artifactId}</artifactId>

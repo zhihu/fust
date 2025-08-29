@@ -8,3 +8,4 @@ allprojects {
     group = project.findProperty('group')
     version = project.findProperty('version')
 }
+

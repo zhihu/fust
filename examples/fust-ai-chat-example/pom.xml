@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.zhihu.fust</groupId>
+        <artifactId>fust-boot-bom</artifactId>
+        <version>0.1.1</version>
+    </parent>
+
+    <artifactId>fust-ai-chat-example</artifactId>
+    <groupId>com.zhihu.fust.example</groupId>
+    <packaging>pom</packaging>
+    <version>1.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.zhihu.fust.example</groupId>
+                <artifactId>fust-ai-chat-example-business</artifactId>
+                <version>1.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <plugins>
+        </plugins>
+    </build>
+    <repositories>
+        <repository>
+            <id>embabel-snapshots</id>
+            <url>https://repo.embabel.com/artifactory/libs-snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <modules>
+        <module>fust-ai-chat-example-web</module>
+    </modules>
+</project>
