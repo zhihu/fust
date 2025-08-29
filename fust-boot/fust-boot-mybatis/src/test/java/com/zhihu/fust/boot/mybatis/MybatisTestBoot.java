@@ -17,6 +17,7 @@ public class MybatisTestBoot {
 
     @Bean
     @Profile("test")
+    @Primary
     public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()
                 .setName("sku") // 数据库名

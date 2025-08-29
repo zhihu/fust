@@ -26,6 +26,7 @@ java.targetCompatibility = JavaVersion.VERSION_17
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 dependencies {
+    api platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
     api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
     api platform("com.linecorp.armeria:armeria-bom:${armeriaVersion}")
     api platform("io.netty:netty-bom:${nettyVersion}")
@@ -51,6 +52,7 @@ java {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
 }
 
 tasks.withType(Javadoc) {

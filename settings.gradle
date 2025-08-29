@@ -1,5 +1,6 @@
 rootProject.name = 'fust'
 include 'bom'
+include 'fust-ai:fust-ai-chat-web'
 include 'fust-base:fust-commons'
 include 'fust-base:fust-core'
 include 'fust-base:fust-provider'

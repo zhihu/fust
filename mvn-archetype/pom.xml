@@ -4,7 +4,7 @@
 
   <groupId>com.zhihu.fust</groupId>
   <artifactId>fust-boot-archetype</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <packaging>maven-archetype</packaging>
 
   <name>fust-boot-archetype</name>

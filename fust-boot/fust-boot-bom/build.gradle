@@ -15,11 +15,13 @@ repositories {
 dependencyManagement {
     imports {
         mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+        mavenBom("org.springframework.ai:spring-ai-bom:${springAiVersion}")
     }
 
     dependencies {
         dependency "org.projectlombok:lombok:${lombokVersion}"
         dependencySet(group: 'com.zhihu.fust', version: version) {
+            entry 'fust-ai-chat-web'
             entry 'fust-commons'
             entry 'fust-core'
             entry 'fust-provider'

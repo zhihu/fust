@@ -8,7 +8,7 @@ target/
 
 ### vitepress ###
 dist/
-
+dist
 ### IntelliJ IDEA ###
 .gradle/
 .idea/
@@ -38,8 +38,43 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# ===============================================
+# Node.js & Frontend (Nuxt)
+# ===============================================
+### Node.js ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+### Package Managers ###
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-debug.log*
+
+### Nuxt.js ###
+.nuxt/
+.output/
+.nitro/
+dist/
+.cache/
+.temp/
+
+### Frontend Build Tools ###
+.parcel-cache/
+.next/
+.svelte-kit/
 ### VS Code ###
 .vscode/
+
+### Spring Web Static
+**/static/_nuxt/*
+**/static/chat/*
+**/static/knowledge/*
+**/static/*.html
+**/static/*.ico
 
 ### Mac OS ###
 .DS_Store

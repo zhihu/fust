@@ -7,6 +7,7 @@ plugins {
 dependencies {
     constraints {
         // projects
+        api project(":fust-ai:fust-ai-chat-web")
         api project(":fust-base:fust-commons")
         api project(":fust-base:fust-core")
         api project(":fust-base:fust-provider")

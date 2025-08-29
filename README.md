@@ -201,12 +201,19 @@ FUST 提供了项目脚手架，帮助您快速创建基于 FUST 框架的项目
 ### 命令行创建(MacOS)
 
 ```bash
-export ORIGIN_HOME=$JAVA_HOME && \
-export JAVA_HOME="$(/usr/libexec/java_home -v 17)" && \
-mvn archetype:generate -DarchetypeGroupId=com.zhihu.fust \
--DarchetypeArtifactId=fust-boot-archetype -DarchetypeVersion=0.1.0 \
--DinteractiveMode=false -DarchetypeCatalog=local -DgroupId=demo -DartifactId=demo-yoda && \
-export JAVA_HOME=$ORIGIN_HOME && unset ORIGIN_HOME
+# fust的 mvn archetype 需要安装到本地
+cd mvn-archetype
+mvn clean install
+
+# 进入到你的工作目录
+cd YOUR_PROJECT_DIR
+export ORIGIN_HOME=$JAVA_HOME &&
+  export JAVA_HOME="$(/usr/libexec/java_home -v 17)" &&
+  mvn archetype:generate -DarchetypeGroupId=com.zhihu.fust \
+    -DarchetypeArtifactId=fust-boot-archetype -DarchetypeVersion=0.1.1 \
+    -DinteractiveMode=false -DarchetypeCatalog=local -DgroupId=demo -DartifactId=demo-yoda &&
+  export JAVA_HOME=$ORIGIN_HOME && unset ORIGIN_HOME
+
 ```
 
 ### 项目结构
