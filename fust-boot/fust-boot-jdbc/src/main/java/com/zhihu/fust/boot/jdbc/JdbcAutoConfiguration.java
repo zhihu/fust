@@ -196,15 +196,16 @@ public class JdbcAutoConfiguration implements ApplicationContextAware {
         if (discover != null) {
             for (DatabaseProperties p : properties) {
                 if (p.isAutoDiscover()) {
+                    DbType dbType = parseDbType(p.getType());
                     List<DataSourceProperties> discoverList = null;
                     String resourceName = p.getName();
                     if (StringUtils.isNotEmpty(resourceName)) {
-                        discoverList = discover.discover(resourceName);
+                        discoverList = discover.discover(resourceName, dbType);
                     }
 
                     // normally, just use the p.name
                     if (CollectionUtils.isEmpty(discoverList)) {
-                        discoverList = discover.discover(p.getName());
+                        discoverList = discover.discover(p.getName(), dbType);
                     }
 
                     if (CollectionUtils.isEmpty(discoverList)) {
@@ -217,6 +218,22 @@ public class JdbcAutoConfiguration implements ApplicationContextAware {
         }
 
         return properties;
+    }
+
+    private static DbType parseDbType(String type) {
+        if (StringUtils.isEmpty(type)) {
+            return DbType.MYSQL; // default to MySQL
+        }
+        
+        String upperType = type.toUpperCase();
+        switch (upperType) {
+            case "MYSQL":
+                return DbType.MYSQL;
+            case "POSTGRESQL":
+                return DbType.POSTGRESQL;
+            default:
+                return DbType.OTHER;
+        }
     }
 
     private static boolean isUnitTest() {

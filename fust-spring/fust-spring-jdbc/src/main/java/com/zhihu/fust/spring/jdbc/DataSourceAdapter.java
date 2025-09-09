@@ -101,21 +101,23 @@ public class DataSourceAdapter {
         config.setUsername(ds.getUsername());
         config.setPassword(ds.getPassword());
 
-        config.addDataSourceProperty("characterEncoding", "utf8");
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-
-        // process 0000-00-00 00:00:00 to null in java
-        config.addDataSourceProperty("zeroDateTimeBehavior", "convertToNull");
-        config.addDataSourceProperty("serverTimezone", String.valueOf(ZoneId.systemDefault().getId()));
-        config.setConnectionInitSql("SET NAMES utf8mb4");
 
         // 设置数据连接超时，默认值为 30s
         Optional.ofNullable(db.getConnectionTimeoutMs())
                 .ifPresent(config::setConnectionTimeout);
 
-        config.addDataSourceProperty("queryInterceptors", DEFAULT_TRACER);
+        boolean isMySQL = DbType.MYSQL.match(ds.getUrl());
+        if (isMySQL) {
+            config.addDataSourceProperty("characterEncoding", "utf8");
+            config.setConnectionInitSql("SET NAMES utf8mb4");
+            config.addDataSourceProperty("queryInterceptors", DEFAULT_TRACER);
+            // process 0000-00-00 00:00:00 to null in java
+            config.addDataSourceProperty("zeroDateTimeBehavior", "convertToNull");
+            config.addDataSourceProperty("serverTimezone", String.valueOf(ZoneId.systemDefault().getId()));
+        }
 
         HikariDataSourceCreator creator = new HikariDataSourceCreator(config);
         if (Env.isProduction()) {

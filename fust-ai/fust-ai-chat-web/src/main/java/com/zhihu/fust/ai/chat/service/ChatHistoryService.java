@@ -60,8 +60,8 @@ public class ChatHistoryService {
     @Transactional
     public void saveMessage(MessageType type, String conversationId, String message) {
         ChatHistoryModel model = new ChatHistoryModel();
-        model.setContent(message);
-        model.setType(type.name());
+        model.setMsgContent(message);
+        model.setMsgType(type.name());
         model.setMetadata("");
         model.setConversationId(conversationId);
         chatHistoryDao.create(model);
@@ -72,9 +72,9 @@ public class ChatHistoryService {
      */
     private Message deserializeMessage(ChatHistoryModel model) {
         try {
-            MessageType messageType = MessageType.valueOf(model.getType());
+            MessageType messageType = MessageType.valueOf(model.getMsgType());
 
-            String content = model.getContent();
+            String content = model.getMsgContent();
             // 根据消息类型创建对应的Message实例
             switch (messageType) {
                 case USER:

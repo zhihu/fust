@@ -1,7 +1,5 @@
 package com.zhihu.fust.ai.chat.tool;
 
-import org.springframework.ai.tool.annotation.Tool;
-
 import java.util.List;
 
 /**

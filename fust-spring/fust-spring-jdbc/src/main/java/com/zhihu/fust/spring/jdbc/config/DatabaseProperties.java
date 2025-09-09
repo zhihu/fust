@@ -11,8 +11,18 @@ public class DatabaseProperties {
 
     private static final int DEFAULT_MIN_IDLE_SIZE = 10;
     private static final int DEFAULT_MAX_POOL_SIZE = 30;
+    private static final String DEFAULT_TYPE = "mysql";
 
     private String name;
+    /**
+     * 不同的数据库类型
+     * mysql 类型支持: MySQL 以及 TiDB
+     * postgresql：用于支持 postgresql
+     * mysql/postgresql
+     * <p>
+     * 默认值为： mysql
+     */
+    private String type = DEFAULT_TYPE;
     private boolean useSSL = false;
     private int minIdle = DEFAULT_MIN_IDLE_SIZE;
     private int maxPoolSize = DEFAULT_MAX_POOL_SIZE;
@@ -35,6 +45,14 @@ public class DatabaseProperties {
      * use master server only
      */
     private boolean masterOnly;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getName() {
         return name;
