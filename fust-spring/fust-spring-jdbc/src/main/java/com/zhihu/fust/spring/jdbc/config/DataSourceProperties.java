@@ -18,6 +18,7 @@ public class DataSourceProperties {
     private String username;
     private String password;
 
+    private String dialog;
     public DataSourceProperties() {
         // default is master
         this.type = MASTER;

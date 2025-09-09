@@ -11,7 +11,6 @@ import org.springframework.ai.chat.model.ChatModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ChatClientBuilder {
 

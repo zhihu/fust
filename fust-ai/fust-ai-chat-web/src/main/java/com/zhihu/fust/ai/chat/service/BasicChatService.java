@@ -1,6 +1,5 @@
 package com.zhihu.fust.ai.chat.service;
 
-import com.zhihu.fust.ai.chat.tool.zhipu.ZhipuWebSearchTool;
 import com.zhihu.fust.commons.lang.StringUtils;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -87,6 +86,9 @@ public class BasicChatService implements ChatService {
 
 
         try {
+
+            // save user message
+            chatHistoryService.saveMessage(MessageType.USER, conversationId, message);
             // 用一个 StringBuilder 收集所有内容
             StringBuilder aiReply = new StringBuilder();
 

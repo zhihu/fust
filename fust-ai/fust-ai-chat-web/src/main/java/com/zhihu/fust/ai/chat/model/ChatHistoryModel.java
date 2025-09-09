@@ -11,8 +11,8 @@ public class ChatHistoryModel {
     @Id
     private Long id;
     private String conversationId;
-    private String type;
-    private String content;
+    private String msgType;
+    private String msgContent;
     private String metadata;
     private Instant createdAt;
     private Instant updatedAt;
@@ -33,20 +33,20 @@ public class ChatHistoryModel {
         this.conversationId = conversationId;
     }
 
-    public String getType() {
-        return type;
+    public String getMsgType() {
+        return msgType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setMsgType(String msgType) {
+        this.msgType = msgType;
     }
 
-    public String getContent() {
-        return content;
+    public String getMsgContent() {
+        return msgContent;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setMsgContent(String msgContent) {
+        this.msgContent = msgContent;
     }
 
     public String getMetadata() {
