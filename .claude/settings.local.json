@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(mvn compile -q)",
+      "Bash(./gradlew compileJava -q)",
+      "Bash(gradle compileJava -q)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

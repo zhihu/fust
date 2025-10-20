@@ -1,0 +1,1 @@
+生成 git 提交描述，执行 git commit

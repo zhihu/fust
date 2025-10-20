@@ -71,7 +71,7 @@ public class ChatController {
     public ResponseEntity<List<SessionResponse>> getSessions() {
         LOGGER.info("收到获取会话列表请求");
         try {
-            List<SessionResponse> sessions = springAISessionService.getSessions();
+            List<SessionResponse> sessions = springAISessionService.getSessionsByUserId();
             return ResponseEntity.ok(sessions);
         } catch (Exception e) {
             LOGGER.error("获取会话列表失败", e);
@@ -100,7 +100,8 @@ public class ChatController {
      */
     @PutMapping("/sessions/{sessionId}/title")
     @ResponseBody
-    public ResponseEntity<Void> updateSessionTitle(@PathVariable String sessionId, @RequestBody UpdateSessionTitleRequest request) {
+    public ResponseEntity<Void> updateSessionTitle(@PathVariable String sessionId,
+            @RequestBody UpdateSessionTitleRequest request) {
         LOGGER.info("收到更新会话标题请求，会话ID: {}, 新标题: {}", sessionId, request.getTitle());
         try {
             springAISessionService.updateSessionTitle(sessionId, request.getTitle());
