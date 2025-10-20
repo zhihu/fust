@@ -29,11 +29,14 @@ public class ChatSessionService {
     private final UserChatSessionDao userChatSessionDao;
     private final ChatService chatService;
     private final ChatHistoryService chatHistoryService;
+    private final UserProviderService userProviderService;
 
-    public ChatSessionService(UserChatSessionDao userChatSessionDao, ChatService chatService, ChatHistoryService chatHistoryService) {
+    public ChatSessionService(UserChatSessionDao userChatSessionDao, ChatService chatService,
+            ChatHistoryService chatHistoryService, UserProviderService userProviderService) {
         this.userChatSessionDao = userChatSessionDao;
         this.chatService = chatService;
         this.chatHistoryService = chatHistoryService;
+        this.userProviderService = userProviderService;
     }
 
     /**
@@ -46,7 +49,7 @@ public class ChatSessionService {
         UserChatSessionModel sessionModel = new UserChatSessionModel();
         sessionModel.setConversationId(sessionId);
         sessionModel.setTitle(request.getTitle() != null ? request.getTitle() : "新对话");
-        sessionModel.setUserId("default"); // 暂时使用默认用户ID
+        sessionModel.setUserId(userProviderService.currentUser());
         sessionModel.setCreatedAt(now);
         sessionModel.setUpdatedAt(now);
 
@@ -56,6 +59,14 @@ public class ChatSessionService {
         log.info("创建新会话: {}, 标题: {}", sessionId, sessionModel.getTitle());
 
         return convertToSessionResponse(sessionModel);
+    }
+
+    public List<SessionResponse> getSessionsByUserId() {
+        List<UserChatSessionModel> sessions = userChatSessionDao.findAllByUserId(userProviderService.currentUser());
+        return sessions.stream()
+                .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
+                .map(this::convertToSessionResponse)
+                .toList();
     }
 
     /**
@@ -79,9 +90,10 @@ public class ChatSessionService {
      */
     public SessionDetailResponse getSessionDetail(String sessionId) {
         try {
-            UserChatSessionModel session = userChatSessionDao.findByConversationId(sessionId);
+            String currentUserId = userProviderService.currentUser();
+            UserChatSessionModel session = userChatSessionDao.findByUserIdAndConversationId(currentUserId, sessionId);
             if (session == null) {
-                throw new RuntimeException("会话不存在: " + sessionId);
+                throw new RuntimeException("会话不存在或无权访问: " + sessionId);
             }
 
             // 获取聊天历史（从 Spring AI ChatMemory）
@@ -99,7 +111,8 @@ public class ChatSessionService {
      */
     public boolean sessionExists(String sessionId) {
         try {
-            UserChatSessionModel session = userChatSessionDao.findByConversationId(sessionId);
+            String currentUserId = userProviderService.currentUser();
+            UserChatSessionModel session = userChatSessionDao.findByUserIdAndConversationId(currentUserId, sessionId);
             return session != null;
         } catch (Exception e) {
             log.error("检查会话是否存在失败，会话ID: {}", sessionId, e);
@@ -112,6 +125,13 @@ public class ChatSessionService {
      */
     public void deleteSession(String sessionId) {
         try {
+            String currentUserId = userProviderService.currentUser();
+            // 先检查会话是否存在且属于当前用户
+            UserChatSessionModel session = userChatSessionDao.findByUserIdAndConversationId(currentUserId, sessionId);
+            if (session == null) {
+                throw new RuntimeException("会话不存在或无权删除: " + sessionId);
+            }
+
             // 删除会话元数据
             userChatSessionDao.deleteByConversationId(sessionId);
 
@@ -130,10 +150,11 @@ public class ChatSessionService {
      */
     public void updateSessionTitle(String sessionId, String title) {
         try {
+            String currentUserId = userProviderService.currentUser();
             Instant now = Instant.now();
-            int updated = userChatSessionDao.updateByConversationId(sessionId, title, now);
+            int updated = userChatSessionDao.updateByUserIdAndConversationId(currentUserId, sessionId, title, now);
             if (updated == 0) {
-                throw new RuntimeException("会话不存在: " + sessionId);
+                throw new RuntimeException("会话不存在或无权更新: " + sessionId);
             }
 
             log.info("更新会话标题: {} -> {}", sessionId, title);
@@ -148,7 +169,8 @@ public class ChatSessionService {
      */
     public void updateSessionActivity(String sessionId) {
         try {
-            UserChatSessionModel session = userChatSessionDao.findByConversationId(sessionId);
+            String currentUserId = userProviderService.currentUser();
+            UserChatSessionModel session = userChatSessionDao.findByUserIdAndConversationId(currentUserId, sessionId);
             if (session != null) {
                 Instant now = Instant.now();
                 userChatSessionDao.updateByConversationId(sessionId, session.getTitle(), now);
@@ -235,4 +257,4 @@ public class ChatSessionService {
     private LocalDateTime instantToLocalDateTime(Instant instant) {
         return instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
-} 
+}
